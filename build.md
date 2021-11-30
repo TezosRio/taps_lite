@@ -22,16 +22,23 @@ git clone https://github.com/TezosRio/taps_lite.git
 npm install
 ```
 
-
 ### Compile source-code locally
 
 ```bash
-npm run build
+npm run serve
 ```
 
 ### Open dApp on your preferred web-browser
 
 http://localhost:8080
+
+
+### To build a version for production environment (which will be generated in the 'dist' folder)
+
+```bash
+npm run build
+```
+
 
 
 That's it!
