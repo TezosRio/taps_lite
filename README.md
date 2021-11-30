@@ -24,7 +24,7 @@ This software is BETA. It is experimental and still under development and testin
 ## Features
 
  - Displays a list of delegators that should be paid and how much.
- - Shows each delegator’s share, reward value before fee, value after fee, calculated in real time (if user changes percentage, it updates on the fly).
+ - Shows each delegator’s share, reward value before fee, value after fee, calculated in real time.
  - Allows user to toggle individually which delegators should be paid or not.
  - Lets user have multiple different fee percentages for each delegator.
  - Allows user to specify a minimum delegated amount for the delegator to be paid.
