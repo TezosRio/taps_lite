@@ -16,6 +16,13 @@ Then run the following:
 git clone https://github.com/TezosRio/taps_lite.git
 ```
 
+### Install dependencies
+
+```bash
+npm install
+```
+
+
 ### Compile source-code locally
 
 ```bash
