@@ -6,7 +6,7 @@ import ToggleButton from 'vue-js-toggle-button';
 import VueSimpleAlert from "vue-simple-alert";
 import { jsPDF } from "jspdf";
 import html2canvas from 'html2canvas';
-import VueSpinners from 'vue-spinners'
+import VueSpinners from 'vue-spinners';
 
 Vue.config.productionTip = false
 Vue.use(ToggleButton);

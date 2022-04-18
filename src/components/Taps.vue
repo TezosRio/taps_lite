@@ -1,5 +1,6 @@
 <template>
-<div class="container">
+<div id="app">
+<div class="container" v-if="isMobile === false">
     <div class="wrapper">
         <!-- Sidebar  -->
         <nav id="sidebar" v-show="isConnected === true">
@@ -32,7 +33,6 @@
 
         <!-- Page Content  -->
         <div id="content" style="margin-left:-15px;">
-
             <section class="width:700px;box-content-rewards" style="margin-left:15px;display:block;" id="topBar" v-show="isConnected === true">
                 <div style="position:relative;left:-25px;top:-25px;background-color:grey;width:100%;">
                    <div style="display:inline-block;width:58%;text-align:right;margin-top:-10px;"><span class="balance">Balance: {{addressBalance ? addressBalance : ''}} {{addressBalance ? tezSymbol : ''}}</span></div>
@@ -211,7 +211,7 @@
                     </div>
                 </div>
                 <div v-show="menuop === 'delegators' && delegators.length > 0 && configuredBakerId.length > 0">
-                    <h4>(in rewards-pending cycle {{currentCycle - 5}})</h4>
+                    <h4>(in rewards-pending cycle {{currentCycle - 6}})</h4>
                     <div id="form-todo form-group" style="width:955px;">
                         <table class="table table-taps-alt">
                             <thead class="head-table-taps">
@@ -274,6 +274,254 @@
         </div>
     </div>
 </div>
+
+<div class="container" v-if="isMobile === true" style="margin:none;padding:0px 0px 0px 0px;">
+    <div id="mobileWelcome" class="text-center" v-show="isConnected === false">
+        <section class="box-content-rewards" style="text-center" id="welcomeMobile" v-show="menuop === 'welcome' && isConnected === false">
+            <div class="text-center" style="display:block;padding:20px;margin-top:60px;">
+                <figure>
+                    <img :src="images.logo" class="img-logo-taps" alt="TAPS" width="150">
+                </figure>
+                <br><br>
+                <div style="background-color:transparent;width:100%;border:none;">
+                    <span style="color:black;font-family: Verdana, sans-serif;font-weight: lighter;font-size:12px;">
+                        The Easiest Way to Distribute<br>
+                        Tezos Baking Rewards
+                    </span>
+                    <br><br>
+                    <span style="color:grey;font-family: Verdana, sans-serif;font-weight: lighter;font-size:12px;">
+                        Manage your cycle payments easily!<br>
+                        Distribute rewards at a button click!
+                    </span>
+                    <br><br><br> 
+                    <div style="width:100%;height:auto;border:none;">
+                        <button type="button" id="idBtnConnect" class="botao-taps" v-on:click="connectWallet">CONNECT</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="wrapper" style="background-color: black;height:80px;" v-show="isConnected === true">
+        <div id="mobileHeader" v-show="isConnected === true">
+            <div class="sidebar-header" style="margin-top:27px;margin-left:25px;">
+                <!-- Top Navigation Menu -->
+                <div class="topnav" id="topnav">
+
+                    <figure>
+                        <img :src="images.logo" class="img-logo-taps" alt="TAPS" width="70">
+                    </figure>
+
+                    <div style="position:absolute;top:12px;left:125px;">
+                        <span class="roundedCornersMobile">             
+                                {{connectedWalletAddress ? connectedWalletAddress.substr(0, 8) + '...' + connectedWalletAddress.substr(connectedWalletAddress.length - 8, connectedWalletAddress.length) : ''}}  
+                        </span>
+                    </div>
+
+                    <!-- Navigation links (hidden by default) -->
+                    <div id="myLinks">
+                        <a href="#sidebar" v-on:click="setMenuOption('dashboard')">DASHBOARD</a>
+                        <a href="#sidebar" v-on:click="setMenuOption('settings')">SETTINGS</a>
+                        <a href="#sidebar" v-on:click="setMenuOption('delegators')">DELEGATORS</a>
+                        <a href="#sidebar" v-on:click="setMenuOption('reset')">RESET</a>
+                        <a href="#sidebar" style="color:red;font-weight:bold;" v-on:click="createBatchTransaction">{{distributeButtonCaption}}</a>
+                        <a href="#sidebar" v-on:click="disconnect">LOG OUT</a>
+                    </div>
+
+                    <!-- "Hamburger menu" / "Bar icon" to toggle the navigation links -->
+                    <a href="javascript:void(0);" class="icon" v-on:click="toggleMobileMenu()">
+                        <i class="fa fa-bars"></i>
+                    </a>
+                </div>
+
+            </div>
+
+            <div style="position:absolute;top:80px;left:0px;background-color:grey;width:100%;height:25px;font-size:11px;padding:3px;color:white;text-align:right;">
+                <span>Balance: {{addressBalance ? addressBalance : ''}} {{addressBalance ? tezSymbol : ''}}</span>
+            </div>
+        </div>
+
+        <div id="mobileBody" style="position:absolute;top:160px;left:30px;" v-show="isConnected === true">
+            <section id="dashboardMobile" v-show="(menuop === 'dashboard')">
+                <h5>Dashboard</h5>
+                <div id="form-todo form-group" style="width:100%;">
+                    <div v-show="this.bakerInfoLogo" style="position:absolute;margin-top:-45px;width:100%;height:20px;text-align:right;padding-right:15px;border:none;">
+                        <div id="logoBaker">
+                            {{this.bakerInfoName}} <img v-bind:src="this.bakerInfoLogo" width="30" height="30" style="border:none;text-aling:left;vertical-align:middle;">
+                        </div>
+                    </div>
+
+                    <table class="table table-taps-alt" style="line-height:8px;margin-left:-10px;margin-top:0px;">
+                        <tr>
+                            <td class="title-mobile">Baking Address</td>
+                            <td style="text-alignment:right;width:125px;">{{configuredBakerId ? configuredBakerId.substr(0, 6) + '...' + configuredBakerId.substr(configuredBakerId.length - 6, configuredBakerId.length) : 'Not Configured'}}</td>
+                        </tr>
+                        <tr>
+                            <td class="title-mobile">Rewards Distrib Status</td>
+                            <td style="text-alignment:right;width:125px;">
+                                <toggle-button @change="toggleStatus()" :speed="200" :width="50" :value="tapsStatus" :sync="true" color="#c8b08b" :labels="{checked: 'On', unchecked: 'Off'}" :checked="tapsStatus" v-model="tapsStatus" style="margin-left:0px;margin-top:-6px;height:10px;"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="title-mobile">RPC Provider</td>
+                            <td style="text-alignment:right;width:125px;">{{isRpcProviderOnline ? 'Online' : 'Alternative'}}</td>
+                        </tr>
+                        <tr>
+                            <td class="title-mobile">Configured Baking Fee</td>
+                            <td style="text-alignment:right;width:125px;">{{configuredDelegatorFee ? configuredDelegatorFee + '%' : computedUnavailable}}</td>
+                        </tr>
+                        <tr>
+                            <td class="title-mobile">Min Delegated for Payout</td>
+                            <td style="text-alignment:right;width:125px;">{{configuredMinAcceptedDelegatedAmount ? configuredMinAcceptedDelegatedAmount + tezSymbol : computedUnavailable}}</td>
+                        </tr>
+                        <tr>
+                            <td class="title-mobile">Min Accepted Transfer</td>
+                            <td style="text-alignment:right;width:125px;">{{configuredMinTransactionAmount ? configuredMinTransactionAmount + tezSymbol : computedUnavailable}}</td>
+                        </tr>
+                        <tr>
+                            <td class="title-mobile">Current Delegators Total</td>
+                            <td style="text-alignment:right;width:125px;">{{totalDelegators ? totalDelegators : computedUnavailable}}</td>
+                        </tr>
+                        <tr>
+                            <td class="title-mobile">Cycle: Current/Rewards</td>
+                            <td style="text-alignment:right;width:125px;">{{ currentCycle > 0 ? currentCycle +  " / " + rewardsPendingCycle : computedUnavailable  }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </section>
+
+            <section id="settingsMobile" v-show="(menuop === 'settings')">
+                <h5 style="margin-left:-10px;margin-top:-20px;">Settings</h5>
+                <div id="form-todo form-group" style="position:absolute;width:100%;left:-10px;padding:0px;">
+                    <p>
+                        <label>
+                            <span class="title-mobile">Baking Address
+                                <span><span class="errorRequired" style="margin-left:10px;"><span v-if="msg.configuredBakerId">{{msg.configuredBakerId}}</span></span></span>
+                            </span>
+                            <input id="idBakingAddress" name="bakingAddress" type="text" size="30" maxlength="36" v-model="configuredBakerId" @keypress="isAlphaNumeric($event)" class="form-control input-taps" placeholder="Enter your Tezos baking address" style="width:320px;text-align:center;font-size:12px;">
+                        </label>
+                    </p>
+                    <p>
+                        <label>
+                            <span class="title-mobile">Tezos RPC Provider
+                                <span><span class="errorRequired" style="margin-left:10px;"><span v-if="msg.configuredRpcProvider">{{msg.configuredRpcProvider}}</span></span></span>
+                            </span>
+                            <select id="idProvider" name="provider" v-model="configuredRpcProvider" maxlength="70" class="form-control input-taps" placeholder="Enter a Tezos RPC gateway url" style="width:320px;text-align:center;font-size:12px;">
+                                <option disabled value="">Choose a provider...</option>
+                                <option v-for="option in providers" :value="option.value" :key="option.value">{{ option.text }}</option>
+                            </select>
+                        </label>
+                    </p>
+                    <p>
+                         <label>
+                            <span class="title-mobile">Baker Fee (%)</span>
+                            <input id="idFee" name="fee" type="text" size="5" maxlength="5" v-model="configuredDelegatorFee" @keypress="isNumber($event)" class="form-control input-taps" placeholder="Rewards fee" style="width:320px;text-align:center;font-size:12px;">
+                        </label>
+                       <label>
+                            <span class="title-mobile">&nbsp;</span>
+                        </label>
+                        <label>
+                            <span class="title-mobile">Min Delegation ({{tezSymbol}})</span>
+                            <input id="idMinimumAcceptedDelegatedAmount" name="minimumAcceptedDelegatedAmount" type="text" size="5" maxlength="5" v-model="configuredMinAcceptedDelegatedAmount" @keypress="isNumber($event)" class="form-control input-taps" placeholder="Min for payout" style="width:320px;text-align:center;font-size:12px;">
+                        </label>
+                        <label>
+                            <span class="title-mobile">&nbsp;</span>
+                        </label>
+                        <label>
+                            <span class="title-mobile">Min TX Value ({{tezSymbol}})</span>
+                            <input id="idMinTransactionAmount" name="transactionAmount" type="text" size="5" maxlength="10" v-model="configuredMinTransactionAmount" @keypress="isNumber($event)" class="form-control input-taps" placeholder="Min tx amount" style="width:320px;text-align:center;font-size:12px;">
+                        </label>
+                    </p>
+                    <p>
+                    </p>
+                    <p>
+                    </p>
+                    <div style="margin-left:5px;margin-top:10px;width:450px;height:50px;text-align:center;border:none;">
+                        <div>
+                            <button id="idBtnReset" type6="button" @click="resetSettings" style="width:95px;height:40px;display:inline;margin:5px;">DEFAULTS</button>
+                            <button id="idBtnFetch" type="button" @click="fetchBakerDelegators(true)" style="width:75px;height:40px;display:inline;margin:10px;">SAVE</button>
+                            <div style="position:absolute;width:200px;height:0px;top:225px;left:405px;"> 
+                                <tile v-show="isLoading"></tile>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-show="this.bakerInfoLogo" style="position:absolute;padding-top:70px;margin-left:470px;margin-top:-380px;width:350px;height:350px;text-align:center;vertical-align:middle;">
+                        <div style="border:2px solid #c8b08b;width:180px;height:200px;display:block;margin-left:auto;margin-right:auto;padding-top:20px;">
+                            <div id="logoBaker">
+                                <img v-bind:src="this.bakerInfoLogo">
+                            </div>
+                            <div id="nameBaker">
+                                {{this.bakerInfoName}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="delegatorsMobile" v-show="(menuop === 'delegators')">
+                <h5 style="margin-left:-20px;margin-top:-30px;padding-bottom:5px;">Delegators (cycle {{currentCycle - 6}})</h5>
+                <div v-show="menuop === 'delegators' && (delegators.length == 0 || configuredBakerId.length == 0)">
+                    <div id="form-todo form-group" style="position:absolute;width:100%;left:-10px;padding:0px;">
+                        <br>
+                        Please, configure your baker properties on SETTINGS to start.
+                    </div>
+                </div>
+                <div v-show="menuop === 'delegators' && delegators.length > 0 && configuredBakerId.length > 0">
+                    <div id="form-todo form-group" style="width:100%;">
+                        <table cellpadding="4" style="position:absolute;left:-10px;">
+                            <thead style="font-size:12px;font-weight:bold;line-height:10px;">
+                                <tr style="line-height:10px;">
+                                    <th style="text-align:left;line-height:20px;" scope="col">Delegator</th>
+                                    <th style="text-align:left;line-height:20px;" scope="col">Fee</th>
+                                    <th style="text-align:left;line-height:20px;" scope="col">Rewards</th>
+                                    <th style="text-align:left;line-height:20px;" scope="col">Pay?</th>                                
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr v-for="(delegator,  index) in delegators" :key="index">
+                                    <td style="font-size: 12px;line-height:20px;" align="left">{{ delegator.address.substr(0, 6) + '...' + delegator.address.substr(delegator.address.length - 6, delegator.address.length) }}</td>
+                                    <td style="font-size: 12px;line-height:15px;display: inline-block;white-space: nowrap;" align="center">
+                                        <input id="idDelegatorFee" name="delegatorFee" type="text" align="center" size="2"  maxlength="3" v-model="feeArray[index].fee" @keypress="isNumber($event)" value="feeArray[index].fee" @change="saveSettings" placeholder="" style="text-align: center;font-size: 12px;">&nbsp;%
+                                    </td>
+                                    <td style="font-size: 12px;line-height:20px;" align="center">
+                                        {{(((totalRewards / ONE_MILLION) * (delegator.balance / stakingBalance))) - (((totalRewards / ONE_MILLION) * (delegator.balance / stakingBalance) * (feeArray[index].fee/100))) | formatTez }}{{tezSymbol}}
+                                    </td>
+                                    <td align="center" style="line-height:20px;">
+                                        <toggle-button
+                                        :value="payoutArray[index].value"
+                                        :sync="true"
+                                        :labels="true"
+                                        :disabled="false"
+                                        color="#c8b08b"
+                                        :key="index"
+                                        @change="toggle(index)" />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <br><br>
+                </div>
+            </section>
+
+            <section id="resetMobile" v-show="(menuop === 'reset')">
+                <div v-show="menuop === 'reset'">
+                    <h5>Reset</h5>
+                    <span style="padding-bottom:10px;margin-top:-30px;margin-left:2px;font-size:13px;">Taps cleanup</span>
+                    <div id="form-todo form-group" style="width:100%;height:300px;padding-top:20px;padding-left:10px;font-size:12px;">
+                        <span>Reset to a factory-default state, cleaning up all settings changed in configuration.</span>
+                        <br><br><br>
+                        <button id="idBtnFactoryReset" type="button" @click="doFactoryReset" style="width:95px;height:40px;display:inline;margin-left:0px;">RESET</button>
+                    </div>                    
+                </div>
+            </section>
+
+
+        </div>
+    </div>
+
+</div></div>
 </template>
 
 <script>
@@ -335,6 +583,7 @@ export default {
             configuredMinTransactionAmount: '0.0001',
             configuredBakerId: '',            
             // Flow control variables.
+            isMobile: false,
             isConnected : false,
             isRpcProviderOnline: false,
             tapsStatus: false,
@@ -379,10 +628,27 @@ export default {
     },  
     methods:
     {
+        /* Toggle between showing and hiding the navigation menu links when the user clicks on the hamburger menu / bar icon */
+        toggleMobileMenu()
+        {
+            var x = document.getElementById("myLinks");
+            var y = document.getElementById("topnav");
+
+            if (x.style.display === "none") {
+                x.style.display = "inline-block";
+                y.style.height = "345px";
+            } else {
+                x.style.display = "none";
+                y.style.height = "55px";
+            }
+            }, 
+
+
         // Specifies which page will be shown upon user menu selection.
         setMenuOption(option) 
         {
             this.menuop = option;
+            this.toggleMobileMenu();
         },
         // Bring back default values to configuration.
         resetSettings() 
@@ -588,7 +854,7 @@ export default {
                 .get(GET_TEZOS_HEAD_URL)
                 .then(response => ( this.currentCycle = response.data.cycle,
                                     axios
-                                        .get(GET_TEZOS_REWARDS_SPLIT_URL + this.configuredBakerId + '/' + parseInt(this.currentCycle - 5) + '?limit=' + TEZOS_REWARDS_SPLIT_RESPONSE_LIMIT)
+                                        .get(GET_TEZOS_REWARDS_SPLIT_URL + this.configuredBakerId + '/' + parseInt(this.currentCycle - 6) + '?limit=' + TEZOS_REWARDS_SPLIT_RESPONSE_LIMIT)
                                         .then(response => (
                                                             this.totalDelegators = response.data.delegators.length,
                                                             this.delegators = response.data.delegators,
@@ -890,7 +1156,7 @@ export default {
            else
            {
                 // Builds contents for the PDF file.
-                var payoutCycle = this.currentCycle - 5;
+                var payoutCycle = this.currentCycle - 6;
 
                 const doc = new jsPDF();
                 doc.setFontSize(38);
@@ -1161,6 +1427,16 @@ export default {
         // Changes DISTRIBUTE button caption according to status.
         this.toggleStatus();
 
+        // Checks if device has a small screen (mobile).
+        if( screen.width <= 760 )
+        {
+            this.isMobile = true;
+        }
+        else
+        {
+            this.isMobile = false;
+        }
+
     },
     filters: 
     {
@@ -1181,7 +1457,7 @@ export default {
         // Formats the way that data is presented to the user.
         rewardsPendingCycle: function() 
         {
-            return this.currentCycle - 5
+            return this.currentCycle - 6
         },
         computedUnavailable: function() 
         {
@@ -1331,6 +1607,20 @@ export default {
         width:auto;
     }
 
+    .roundedCornersMobile {
+        vertical-align: middle;
+        line-height:40px;
+        border-radius: 30px;
+        background: #c8b08b;
+        padding: 8px;
+        color:white;
+        font-family: Verdana, sans-serif;
+        font-weight: bold;
+        font-size: 12px;
+        text-align:center;
+        width:auto;
+    }
+
     .balance {
         vertical-align: middle;
         line-height:100px;
@@ -1356,6 +1646,23 @@ export default {
         color:#868079;
     }
 
+    .title-mobile {
+        font-family:Verdana, Geneva, Tahoma, sans-serif;
+        font-weight:bold;
+        font-size: 12px;
+        color:#868079;
+        width:200px;
+    }
+
+    .data-mobile {
+        font-family:Verdana, Geneva, Tahoma, sans-serif;
+        font-weight:normal;
+        font-size: 12px;
+        padding-left: 5px;
+        color:black;
+    }
+
+
     .errorRequired{
         font-family: Verdana, Geneva, Tahoma, sans-serif;
         font-weight: bold;
@@ -1363,5 +1670,58 @@ export default {
         font-size: 14px;
         color:red;
     }
+
+ /* Style the navigation menu */
+.topnav {
+  overflow: hidden;
+  background-color: black;
+  position: absolute;
+  top: 10px;
+  right:0px;
+  width: 100%;
+  height:55px;
+  z-index:20;
+  padding:20px;
+}
+
+/* Hide the links inside the navigation menu (except for logo/home) */
+.topnav #myLinks
+ {
+   display: none;
+ }
+
+/* Style navigation menu links */
+.topnav a {
+  color: white;
+  padding: 14px 16px;
+  text-decoration: none;
+  font-size: 12px;
+  display: block;
+  text-align: right;
+  margin-left:220px;
+}
+
+/* Style the hamburger menu */
+.topnav a.icon {
+    color: #c5a87c;
+  background: black;
+  display: block;
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-size:17px;
+}
+
+/* Add a grey background color on mouse-over */
+.topnav a:hover {
+  background-color: #ddd;
+  color: black;
+}
+
+/* Style the active link (or home/logo) */
+.active {
+  background-color: #04AA6D;
+  color: white;
+} 
 
 </style>
