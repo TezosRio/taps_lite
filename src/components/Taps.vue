@@ -21,6 +21,15 @@
                     <a href="#sidebar" v-on:click="setMenuOption('delegators')">DELEGATORS</a>
                 </li>
                 <li>
+                    <a href="#sidebar" v-on:click="setMenuOption('csvbatch')">CSV BATCH</a>
+                </li>
+                <li>
+                    <a href="#sidebar" v-on:click="setMenuOption('bondpool')">BOND POOL</a>
+                </li>
+                <li>
+                    <a href="#sidebar" v-on:click="setMenuOption('governance')">GOVERNANCE</a>
+                </li>
+                <li>
                     <a href="#sidebar" v-on:click="setMenuOption('reset')">RESET</a>
                 </li>
             </ul>
@@ -211,13 +220,73 @@
                     </div>
                 </div>
                 <div v-show="menuop === 'delegators' && delegators.length > 0 && configuredBakerId.length > 0">
-                    <h4>(in rewards-pending cycle {{currentCycle - 6}})</h4>
+                    <h4>
+                        Delegators - Payout Cycle:
+                        <input id="idCycleToPay" name="cycleToPay" type="text" align="center" size="3"  maxlength="10" v-model="payoutCycle" @keypress="isNumber($event)" value="payoutCycle" @change="fetchBakerDelegators(false)" placeholder="" style="text-align: center;font-size: 14px;color:#c5a87c;">&nbsp;
+                        <button type="button" id="idBtnOkPayout" class="botao-taps" style="padding-top:-10px;width:60px !important;">OK</button>
+                    </h4>
+
+                    <!-- Bond Poolers -->
+                    <div id="form-todo form-group" style="width:955px;" v-show="doBondPoolPayments == true && bondpoolers.length > 0">
+                        <br>
+                        <table class="table table-taps-alt">
+                            <thead style="border:1px solid #89CFF0;color:white;background-color:#89CFF0;">
+                                <tr>
+                                    <th style="text-align:center;" scope="col">&nbsp;</th>
+                                    <th style="text-align:left;" scope="col">Bondpooler</th>
+                                    <th style="text-align:center;" scope="col">Balance</th>
+                                    <th style="text-align:center;" scope="col">Share</th>
+                                    <th style="text-align:center;" scope="col">Earnings</th>
+                                    <th style="text-align:center;" scope="col">Fee</th>
+                                    <th style="text-align:center;" scope="col">Payout</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr>
+                                    <td style="font-size: 0.9em;" align="center"></td>
+                                    <td style="font-size: 0.9em;" align="left">{{this.bakerInfoName}}</td>
+                                    <td style="font-size: 0.9em;" align="center">{{(this.bakerBalance - computedBondPoolersTotalBalance) | formatTez}}{{tezSymbol}}</td>
+                                    <td style="font-size: 0.9em;" align="center">{{computedBakerPoolShare | formatPercentage}}%</td>
+                                    <td style="font-size: 0.9em;" align="center">{{((((totalRewards - (computedTotalDelegatorsActual * ONE_MILLION)) / ONE_MILLION)) * computedBakerPoolShare) / 100 | formatTez}} {{tezSymbol}}</td>
+                                    <td style="font-size: 0.9em;" align="center"></td>
+                                    <td style="font-size: 0.9em;" align="center"></td>
+                                </tr>
+
+                                <tr v-for="(bondpooler,  index) in bondpoolers" :key="index">
+                                    <td style="font-size: 0.9em;" align="center">{{index+1}}</td>
+                                    <td style="font-size: 0.9em;" align="left">{{bondpooler.memberAddress}}</td>
+                                    <td style="font-size: 0.9em;" align="center">{{bondpooler.memberAmount | formatTez}}{{tezSymbol}}</td>
+                                    <td style="font-size: 0.9em;" align="center">{{bondpooler.memberShare | formatPercentage}}%</td>
+                                    <td style="font-size: 0.9em;" align="center">{{((((totalRewards - (computedTotalDelegatorsActual * ONE_MILLION)) / ONE_MILLION)) * bondpooler.memberShare) / 100 | formatTez}} {{tezSymbol}}</td>
+                                    <td style="font-size: 0.9em;" align="center">{{bondpooler.memberFee}}%</td>
+                                    <td style="font-size: 0.9em;" align="center">
+                                        {{(((((totalRewards - (computedTotalDelegatorsActual * ONE_MILLION)) / ONE_MILLION)) * bondpooler.memberShare) / 100) - (((((totalRewards - (computedTotalDelegatorsActual * ONE_MILLION)) / ONE_MILLION)) * bondpooler.memberShare) / 100) * (bondpooler.memberFee/100) | formatTez }}{{tezSymbol}}
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td style="font-size: 0.9em;" align="center">Totals</td>
+                                    <td style="font-size: 0.9em;" align="left"></td>
+                                    <td style="font-size: 0.9em;" align="center">{{computedPoolTotalBalance| formatTez}}{{tezSymbol}}</td>
+                                    <td style="font-size: 0.9em;" align="center">{{(computedBakerPoolShare + computedPoolTotalShare) | formatPercentage}}%</td>
+                                    <td style="font-size: 0.9em;" align="center">{{computedPoolTotalEarnings + (((((totalRewards - (computedTotalDelegatorsActual * ONE_MILLION)) / ONE_MILLION)) * computedBakerPoolShare) / 100) | formatTez}}{{tezSymbol}}</td>
+                                    <td style="font-size: 0.9em;" align="center"></td>
+                                    <td style="font-size: 0.9em;" align="center">{{computedPoolActualEarnings + (((((totalRewards - (computedTotalDelegatorsActual * ONE_MILLION)) / ONE_MILLION)) * computedBakerPoolShare) / 100) | formatTez}}{{tezSymbol}}</td>
+                                </tr>
+
+                            </tbody>
+                        </table>
+                        <br><br>
+                    </div>
+                    <!-- End of Bond Poolers -->
+
                     <div id="form-todo form-group" style="width:955px;">
                         <table class="table table-taps-alt">
                             <thead class="head-table-taps">
                                 <tr>
                                     <th style="text-align:center;" scope="col">#</th>
-                                    <th style="text-align:center;" scope="col">Delegator</th>
+                                    <th style="text-align:left;" scope="col">Delegator</th>
                                     <th style="text-align:center;" scope="col">Balance</th>
                                     <th style="text-align:center;" scope="col">Share</th>
                                     <th style="text-align:center;" scope="col">Rewards</th>
@@ -255,6 +324,285 @@
                         </table>
                     </div>
                     <br><br>
+                </div>
+
+                <!-- Totals -->
+                <div id="form-todo form-group" style="width:955px;" v-show="(delegators.length > 0 && configuredBakerId.length > 0)">
+                    <table class="table table-taps-alt">
+                        <thead>
+                            <tr>
+                                <th style="text-align:center;" scope="col">Total</th>
+                                <th style="text-align:center;" scope="col"></th>
+                                <th style="text-align:center;" scope="col"></th>
+                                <th style="text-align:center;" scope="col"></th>
+                                <th style="text-align:center;" scope="col">Rewards</th>
+                                <th style="text-align:center;" scope="col"></th>
+                                <th style="text-align:right;" scope="col">Actual</th>
+                                <th style="text-align:center;" scope="col"></th>                                
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <td style="font-size: 0.9em;" align="center">{{delegators.length}}</td>
+                            <td style="font-size: 0.9em;" align="left">&nbsp;</td>
+                            <td style="font-size: 0.9em;" align="center">&nbsp;</td>
+                            <td style="font-size: 0.9em;" align="center"></td>
+                            <td style="font-size: 0.9em;" align="center">{{computedTotalDelegatorsRewards | formatTez }}{{tezSymbol}}</td>
+                            <td style="font-size: 0.9em;" align="center">&nbsp;</td>
+                            <td style="font-size: 0.9em;" align="right">{{computedTotalDelegatorsActual | formatTez }}{{tezSymbol}}</td>
+                            <td align="center">&nbsp;</td>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Totals -->
+            </section>
+
+            <section id="csvbatch" class="box-content-rewards" v-show="menuop === 'csvbatch'">
+                <h2>CSV Batch</h2>
+                <div v-show="menuop === 'csvbatch' && configuredBakerId.length == 0">
+                    <div id="form-todo form-group" style="width:955px;padding-left:20px;">
+                        <br>
+                        Please, configure your baker properties on SETTINGS to start.
+                    </div>
+                </div>
+                <div v-show="menuop === 'csvbatch' && configuredBakerId.length > 0">
+                    <div id="form-todo form-group" style="width:955px;padding-left:20px;">
+                        Import a standard CSV file from a spreadsheet to use as source for a manual batch operation.<br>
+                        <br>
+                        Requirements:<br>
+                        <br>
+                        <ul>
+                            <li>
+                                Delimiter character must be a comma (",").<br>
+                            </li>
+                            <li>
+                                File must contain only two columns, with no headers.<br>
+                            </li>
+                            <li>
+                                First column is for destination adresses (text), one per row.<br>
+                            </li>
+                            <li>
+                                Second column is for amounts in militez (1000000 = 1 tez), one per row<br>
+                            </li>
+                        </ul> 
+                        CSV File format sample:<br>
+                        <table cellspacing="0" cellpadding="2" style="margin-left:25px;border:1px solid black;">
+                            <tr>
+                                <td>tz1S37hEZnNrAXfzuRYSjG9Qxq8VrwpWaukB,1000000</td>
+                            </tr>
+                            <tr>
+                                <td>tz1ZvZLYPYoH2Xm4tX1xprqLZZnXc1kYM4ji,3000000</td>
+                            </tr>
+                            <tr>   
+                                <td>KT1XFqZeHDPw4TmkjgCN5knsYvZYGj2r5c3F,2500000</td>
+                            </tr>
+                        </table>
+                        <br>
+                        Choose your file then check the data before sending it to your Beacon wallet.
+                        <br>
+                        <div style="border-style:none;height:auto;">
+                            <input type="file" ref="doc" @change="readFile()" accept=".csv,.CSV,.txt,.TXT" />
+                            
+                            <br><br><br>
+
+                            <table class="table table-taps-alt" v-show="parsedCsv != null">
+                                <thead class="head-table-taps">
+                                   <tr>
+                                      <th style="text-align:center;" scope="col"></th>
+                                      <th style="text-align:left;" scope="col">Destination Address</th>
+                                      <th style="text-align:center;" scope="col">Amount</th>
+                                   </tr>
+                                 </thead>
+
+                                <tbody>
+                                    <tr v-for="(row,  index) in parsedCsv" :key="index">
+                                       <td style="font-size: 0.9em;" align="center">{{index + 1}}</td>
+                                       <td style="font-size: 0.9em;" align="left">{{row[0]}}</td>
+                                       <td style="font-size: 0.9em;" align="center">{{row[1] / ONE_MILLION}}&nbsp;{{tezSymbol}}</td> 
+                                    </tr>
+
+                                    <tr>
+                                        <td align="left"><b>Total</b></td>
+                                        <td align="left"></td>
+                                        <td align="center"><b>{{computedTotalSumCsv / ONE_MILLION}}&nbsp;{{tezSymbol}}</b></td>
+                                    </tr>
+
+                                </tbody>
+
+                             </table>
+
+                            <div v-show="parsedCsv != null">
+                                <button v-on:click="createCustomCsvBatchTransaction()" id="idBtnSendBatch" type="button" style="width:125px;height:40px;display:inline;margin-left:0px;">SEND BATCH</button>
+                                <br><br><br><br><br>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <section id="bondpool" class="box-content-rewards" v-show="menuop === 'bondpool'">
+                <h2>Bond Pool</h2>
+                <div v-show="menuop === 'bondpool' && configuredBakerId.length == 0">
+                    <div id="form-todo form-group" style="width:955px;padding-left:20px;">
+                        <br>
+                        Please, configure your baker properties on SETTINGS to start.
+                    </div>
+                </div>
+                <div v-show="menuop === 'bondpool' && configuredBakerId.length > 0">
+                    <div id="form-todo form-group" style="width:955px;padding-left:20px;">
+                        Configure your bond pool<br>
+                        <br>
+                        <input type="checkbox" id="idDoBondPoolPayments" v-model="doBondPoolPayments" value="doBondPoolPayments" @click="toggleBondPoolPayments()" />&nbsp;&nbsp;&nbsp;Do bond pool payments on every distribution
+                        <br>
+                        <br>
+                        Distribute cycle rewards income remaining funds (after delegators have been paid)<br>
+                        among configured private participants of the baker.<br>
+                        <br>
+                        Add/update/remove members
+                        <br><br>
+
+                        <div style="width:100%;height:auto;margin-left:0px;margin-top:0px;border:none;">
+                            <input type="text" id="idAddress" v-model="memberAddress" placeholder="Address" style="padding-right:5px;display:inline-block;text-align:left;width:360px;" class="form-control input-taps">
+                            <div style="width:10px;display:inline-block;">&nbsp;</div>
+                            <input type="text" id="idAmount" v-model="memberAmount" @keypress="isNumber($event)" maxlength="20" placeholder="Amount (XTZ)" style="padding:5px;display:inline-block;text-align:left;width:120px;" class="form-control input-taps">
+                            <div style="width:10px;display:inline-block;">&nbsp;</div>
+                            <input type="text" id="idFee" v-model="memberFee" @keypress="isNumber($event)" maxlength="3" placeholder="Fee (%)" size="5" style="padding:5px;display:inline-block;text-align:left;width:80px;" class="form-control input-taps">
+                            <div style="width:10px;display:inline-block;">&nbsp;</div>
+                            <input type="text" id="idName" v-model="memberName" placeholder="Member name" style="padding:5px;display:inline-block;text-align:left;width:170px;" class="form-control input-taps">
+                            <div style="width:10px;display:inline-block;">&nbsp;</div>
+                            <input type="button" @click="addBondPoolMember()" class="add-row" value="ADD" style="padding:5px;display:inline-block;text-align:left;width:50px;">
+                        </div>
+
+                        <br>
+
+                        <table class="table table-taps-fees" id="id_members" style="width:96%;">
+                                <thead class="head-table-taps">
+                                <tr>
+                                    <th style="text-align:left;" scope="col">Address</th>
+                                    <th style="text-align:center;" scope="col">Amount (XTZ)</th>
+                                    <th style="text-align:left;" scope="col">Fee (%)</th>
+                                    <th style="text-align:left;" scope="col">Name</th>
+                                    <th style="text-align:center;" scope="col"></th>
+                                    <th style="text-align:center;" scope="col"></th>
+                                    <th style="text-align:center;" scope="col"></th>
+                                    <th style="text-align:center;" scope="col"></th>
+                                </tr>
+                            </thead>
+
+                            <tbody class="members_class" id="idMembers">
+                                <tr style="line-height:80px;font-size:18px;" v-show="bondpoolers != null && bondpoolers.length == 0">
+                                    <td colspan="6" id="id_nomembers">
+                                        <center>There are no bond pool members registered yet.</center>
+                                    </td>
+                                </tr>
+
+                                <tr v-for="(bondpooler,  index) in bondpoolers" :key="index">
+                                    <td align="left">
+                                        <input name="memberAddress" id="idMemberAddress" v-model="bondpooler.memberAddress" type="text" readonly style="border:none;background:none;width:340px;">
+                                    </td>
+
+                                    <td align="center" >
+                                        <input name="memberAmount" id="idMemberAmount" size="5" maxlength="20" v-model="bondpooler.memberAmount" v-on:focus="processMemberAmount($event, index)" ref="myMemberAmountInput" @keypress="isNumber($event)" @keyup="isValidAmount($event, bondpooler.memberAmount, index)" type="text" style="text-align:right;width:110px;" class="name_amount">
+                                    </td>
+
+                                    <td align="center" >
+                                        <input name="memberFee" id="idMemberFee" size="5" maxlength="3" v-model="bondpooler.memberFee" @keypress="isNumber($event)" @keyup="isValidPercentage($event, bondpooler.memberFee, index)" type="text" style="text-align:right;width:50px;">
+                                    </td>
+
+                                    <td align="center">
+                                        <input name="memberName" id="idMemberName" v-model="bondpooler.memberName" @keyup="isValidName($event, bondpooler.memberName)" type="text" style="width:100px;">
+                                    </td>
+
+                                    <td align="center">
+                                        <img :src="images.delete" style="cursor:pointer;margin-top:-3px;margin-left:10px;" width="30" heigh="30" @click="removeBondPoolMember(index)" />
+                                    </td>
+
+                                    <td align="center">
+                                        &nbsp;
+                                    </td>
+                                </tr>
+
+                            </tbody>
+                        </table>
+                        <br><br>
+                    </div>
+                </div>
+            </section>
+
+            <section class="box-content-rewards" id="governance" v-show="(menuop === 'governance')">
+                    <div v-show="menuop === 'governance'">
+                    <h2>Governance</h2>
+                    <h4 style="padding-bottom:10px;margin-top:-10px;margin-left:2px;">Tezos Proposals Voting</h4>
+                    <div v-show="menuop === 'governance' && configuredBakerId.length == 0">
+                        <div id="form-todo form-group" style="width:955px;padding-left:20px;">
+                            <br>
+                            Please, configure your baker properties on SETTINGS to start.
+                        </div>
+                    </div>
+                    <div v-show="menuop === 'governance' && configuredBakerId.length > 0" id="form-todo form-group" style="width:955px;height:auto;padding-top:0px;padding-left:10px;padding-bottom:30px;">
+                        <div v-for="(proposal,  index) in proposals" :key="index" v-show="true">
+                            <table style="border:1px solid black;width:700px;padding:5px;">
+                                <thead>
+                                    <tr style="background-color:#c5a87c;color:white;">
+                                        <th style="border:1px solid black;text-align:left;padding:5px;" scope="col">Name</th>
+                                        <th style="border:1px solid black;text-align:left;padding:5px;" scope="col">Hash</th>
+                                        <th style="border:1px solid black;text-align:left;padding:5px;" scope="col">Status</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    <tr>
+                                        <td style="border:1px solid black;font-size: 0.9em;width:100px;padding:10px;" align="center">{{capitalizeFirstLetter(proposal.alias)}}</td>
+                                        <td style="border:1px solid black;font-size: 0.9em;width:400px;padding:10px;" align="center">{{proposal.hash}}</td>
+                                        <td style="border:1px solid black;font-size: 0.9em;width:100px;padding:10px;" align="center">{{capitalizeFirstLetter(proposal.status)}}</td> 
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <br>
+                            <table v-show="proposal.status === 'active'" style="border: 1px solid black;width:700px;padding:5px;">
+                                <thead>
+                                    <tr style="background-color:#c5a87c;color:white;">
+                                        <th style="border:1px solid black;text-align:left;padding:5px;" scope="col">Period</th>
+                                        <th style="border:1px solid black;text-align:left;padding:5px;" scope="col">Start Time</th>
+                                        <th style="border:1px solid black;text-align:left;padding:5px;" scope="col">End Time</th>
+                                    </tr>
+                                    </thead>
+
+                                <tbody>
+                                    <tr>
+                                        <td style="border:1px solid black;font-size: 0.9em;width:30%;padding:10px;" align="center">{{capitalizeFirstLetter(currentProposalKind)}}</td>
+                                        <td style="border:1px solid black;font-size: 0.9em;width:40%;padding:10px;" align="center">{{dateBackFrom(currentProposalStartTime)}}</td>
+                                        <td style="border:1px solid black;font-size: 0.9em;width:30%;padding:10px;" align="center">{{dateForwardTo(currentProposalEndTime)}}</td> 
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <br>
+                            <div v-show="proposal.status === 'active'" style="position:relative;height:100px;;margin-top:5px;text-align:center;width:600px;">
+                                <div style="width:auto;display:inline-block;padding:20px;">Cast your vote:</div>
+                                <img :src="images.yay" class="clickable" alt="Yay" v-on:click="vote(configuredBakerId, proposal.hash, 'yay', proposal.kind, index)" style="padding-right:10px;">
+                                <img :src="images.nay" class="clickable" alt="Nay" v-on:click="vote(configuredBakerId, proposal.hash, 'nay', proposal.kind, index)" style="padding-right:10px;" v-show="proposal.kind != 'proposal'">
+                                <img :src="images.pass" class="clickable" alt="Pass" v-on:click="vote(configuredBakerId, proposal.hash, 'pass', proposal.kind, index)" style="padding-right:10px;" v-show="proposal.kind != 'proposal'">
+                            </div>
+                            <div v-show="proposals[index].myVoteCommand.length > 0">
+                                <div style="position:relative;width:700px;margin-top:-20px;margin-bottom:50px;border:1px solid black;padding:10px;display:inline-block;font-size:14px;">
+                                    <textarea type="text" ref="myVoteInput" v-model="proposals[index].myVoteCommand" style="width:550px;border:none;height:46px;resize:none;" readonly />
+                                    <button 
+                                        type="button"
+                                        v-clipboard:copy="proposals[index].myVoteCommand"
+                                        v-clipboard:success="onCopy"
+                                        v-clipboard:error="onError"
+                                        style="position:absolute;left:428px;top:39px;width:95px;height:40px;display:inline-block;margin-left:160px;margin-top:-25px;">
+                                    COPY
+                                    </button>
+                                </div>                                
+                            </div>
+                        <div>
+                            <hr style="margin-left:-50px;color:black;">
+                        </div>
+                        </div>
+                    </div>                    
                 </div>
             </section>
 
@@ -323,6 +671,9 @@
                         <a href="#sidebar" v-on:click="setMenuOption('dashboard')">DASHBOARD</a>
                         <a href="#sidebar" v-on:click="setMenuOption('settings')">SETTINGS</a>
                         <a href="#sidebar" v-on:click="setMenuOption('delegators')">DELEGATORS</a>
+                        <a href="#sidebar" v-on:click="setMenuOption('csvbatch')">CSV BATCH</a>
+                        <a href="#sidebar" v-on:click="setMenuOption('bondpool')">BOND POOL</a>
+                        <a href="#sidebar" v-on:click="setMenuOption('governance')">GOVERNANCE</a>
                         <a href="#sidebar" v-on:click="setMenuOption('reset')">RESET</a>
                         <a href="#sidebar" style="color:red;font-weight:bold;" v-on:click="createBatchTransaction">{{distributeButtonCaption}}</a>
                         <a href="#sidebar" v-on:click="disconnect">LOG OUT</a>
@@ -341,11 +692,12 @@
             </div>
         </div>
 
-        <div id="mobileBody" style="position:absolute;top:160px;left:30px;" v-show="isConnected === true">
+        <div id="mobileBody" v-show="isConnected === true" style="position:relative;top:150px;width:100%;">
+
             <section id="dashboardMobile" v-show="(menuop === 'dashboard')">
                 <h5>Dashboard</h5>
-                <div id="form-todo form-group" style="width:100%;">
-                    <div v-show="this.bakerInfoLogo" style="position:absolute;margin-top:-45px;width:100%;height:20px;text-align:right;padding-right:15px;border:none;">
+                <div id="form-todo form-group" style="width:calc(100vw - 17%);left:calc( (100vw - calc(100vw - 50px)) / 2 );">
+                    <div v-show="this.bakerInfoLogo" style="position:absolute;margin-top:-45px;width:100%;height:20px;text-align:right;padding-right:25px;border:none;">
                         <div id="logoBaker">
                             {{this.bakerInfoName}} <img v-bind:src="this.bakerInfoLogo" width="30" height="30" style="border:none;text-aling:left;vertical-align:middle;">
                         </div>
@@ -371,7 +723,7 @@
                             <td style="text-alignment:right;width:125px;">{{configuredDelegatorFee ? configuredDelegatorFee + '%' : computedUnavailable}}</td>
                         </tr>
                         <tr>
-                            <td class="title-mobile">Min Delegated for Payout</td>
+                            <td class="title-mobile">Min Deleg for Payout</td>
                             <td style="text-alignment:right;width:125px;">{{configuredMinAcceptedDelegatedAmount ? configuredMinAcceptedDelegatedAmount + tezSymbol : computedUnavailable}}</td>
                         </tr>
                         <tr>
@@ -391,67 +743,63 @@
             </section>
 
             <section id="settingsMobile" v-show="(menuop === 'settings')">
-                <h5 style="margin-left:-10px;margin-top:-20px;">Settings</h5>
-                <div id="form-todo form-group" style="position:absolute;width:100%;left:-10px;padding:0px;">
-                    <p>
+                <div style="position:absolute;left:50%;top:200px;transform: translate(-46%, -50%);padding:10px;">
+                <h5>Settings</h5>                    
+                    <div v-show="this.bakerInfoLogo" style="position:absolute;left:225px;top:15px;">
+                        <div id="logoBaker">
+                            {{this.bakerInfoName}} <img v-bind:src="this.bakerInfoLogo" width="30" height="30" style="border:none;text-aling:left;vertical-align:middle;">
+                        </div>
+                    </div>
+                    <div style="position:relative;width:100px;">
+                        <p>
+                            <label>
+                                <span class="title-mobile">Baking Address
+                                    <span><span class="errorRequired" style="margin-left:10px;"><span v-if="msg.configuredBakerId">{{msg.configuredBakerId}}</span></span></span>
+                                </span>
+                                <input id="idBakingAddress" name="bakingAddress" type="text" size="30" maxlength="36" v-model="configuredBakerId" @keypress="isAlphaNumeric($event)" class="form-control input-taps" placeholder="Enter your Tezos baking address" style="width:320px;text-align:center;font-size:12px;">
+                            </label>
+                        </p>
+                        <p>
+                            <label>
+                                <span class="title-mobile">Tezos RPC Provider
+                                    <span><span class="errorRequired" style="margin-left:10px;"><span v-if="msg.configuredRpcProvider">{{msg.configuredRpcProvider}}</span></span></span>
+                                </span>
+                                <select id="idProvider" name="provider" v-model="configuredRpcProvider" maxlength="70" class="form-control input-taps" placeholder="Enter a Tezos RPC gateway url" style="width:320px;text-align:center;font-size:12px;">
+                                    <option disabled value="">Choose a provider...</option>
+                                    <option v-for="option in providers" :value="option.value" :key="option.value">{{ option.text }}</option>
+                                </select>
+                            </label>
+                        </p>
+                        <p>
+                            <label>
+                            </label>
                         <label>
-                            <span class="title-mobile">Baking Address
-                                <span><span class="errorRequired" style="margin-left:10px;"><span v-if="msg.configuredBakerId">{{msg.configuredBakerId}}</span></span></span>
-                            </span>
-                            <input id="idBakingAddress" name="bakingAddress" type="text" size="30" maxlength="36" v-model="configuredBakerId" @keypress="isAlphaNumeric($event)" class="form-control input-taps" placeholder="Enter your Tezos baking address" style="width:320px;text-align:center;font-size:12px;">
-                        </label>
-                    </p>
-                    <p>
-                        <label>
-                            <span class="title-mobile">Tezos RPC Provider
-                                <span><span class="errorRequired" style="margin-left:10px;"><span v-if="msg.configuredRpcProvider">{{msg.configuredRpcProvider}}</span></span></span>
-                            </span>
-                            <select id="idProvider" name="provider" v-model="configuredRpcProvider" maxlength="70" class="form-control input-taps" placeholder="Enter a Tezos RPC gateway url" style="width:320px;text-align:center;font-size:12px;">
-                                <option disabled value="">Choose a provider...</option>
-                                <option v-for="option in providers" :value="option.value" :key="option.value">{{ option.text }}</option>
-                            </select>
-                        </label>
-                    </p>
-                    <p>
-                         <label>
-                            <span class="title-mobile">Baker Fee (%)</span>
-                            <input id="idFee" name="fee" type="text" size="5" maxlength="5" v-model="configuredDelegatorFee" @keypress="isNumber($event)" class="form-control input-taps" placeholder="Rewards fee" style="width:320px;text-align:center;font-size:12px;">
-                        </label>
-                       <label>
-                            <span class="title-mobile">&nbsp;</span>
-                        </label>
-                        <label>
-                            <span class="title-mobile">Min Delegation ({{tezSymbol}})</span>
-                            <input id="idMinimumAcceptedDelegatedAmount" name="minimumAcceptedDelegatedAmount" type="text" size="5" maxlength="5" v-model="configuredMinAcceptedDelegatedAmount" @keypress="isNumber($event)" class="form-control input-taps" placeholder="Min for payout" style="width:320px;text-align:center;font-size:12px;">
-                        </label>
-                        <label>
-                            <span class="title-mobile">&nbsp;</span>
-                        </label>
-                        <label>
-                            <span class="title-mobile">Min TX Value ({{tezSymbol}})</span>
-                            <input id="idMinTransactionAmount" name="transactionAmount" type="text" size="5" maxlength="10" v-model="configuredMinTransactionAmount" @keypress="isNumber($event)" class="form-control input-taps" placeholder="Min tx amount" style="width:320px;text-align:center;font-size:12px;">
-                        </label>
-                    </p>
-                    <p>
-                    </p>
-                    <p>
-                    </p>
-                    <div style="margin-left:5px;margin-top:10px;width:450px;height:50px;text-align:center;border:none;">
+                                <span class="title-mobile">&nbsp;</span>
+                            </label>
+                        </p>
+                    </div>
+                    
+                    <div style="width:300px;height:50px;margin-left:75px;margin-top:-35px;">
+                        <div style="margin-left:-75px;height:18px;">
+                            <span class="title-mobile" style="padding-right:10px;">Baker Fee (%)</span>
+                            <span class="title-mobile" style="padding-right:20px;">Min Deleg ({{tezSymbol}})</span>
+                            <span class="title-mobile">Min TX Val ({{tezSymbol}})</span>
+                        </div>
+                        <div style="margin-left:-80px;">
+                            <input id="idFee" name="fee" type="text" size="5" maxlength="5" v-model="configuredDelegatorFee" @keypress="isNumber($event)" class="form-control input-taps" placeholder="Rewards fee" style="width:100px;text-align:center;font-size:12px;display:inline;margin:5px;">
+                            <input id="idMinimumAcceptedDelegatedAmount" name="minimumAcceptedDelegatedAmount" type="text" size="5" maxlength="5" v-model="configuredMinAcceptedDelegatedAmount" @keypress="isNumber($event)" class="form-control input-taps" placeholder="Min for payout" style="width:100px;text-align:center;font-size:12px;display:inline;margin:5px;">
+                            <input id="idMinTransactionAmount" name="transactionAmount" type="text" size="5" maxlength="10" v-model="configuredMinTransactionAmount" @keypress="isNumber($event)" class="form-control input-taps" placeholder="Min tx amount" style="width:100px;text-align:center;font-size:12px;display:inline;margin:5px;">
+                        </div>
+                    </div>
+                    
+                    <br><br>
+
+                    <div style="margin-left:5px;margin-top:10px;width:300px;height:50px;text-align:center;border:none;">
                         <div>
                             <button id="idBtnReset" type6="button" @click="resetSettings" style="width:95px;height:40px;display:inline;margin:5px;">DEFAULTS</button>
                             <button id="idBtnFetch" type="button" @click="fetchBakerDelegators(true)" style="width:75px;height:40px;display:inline;margin:10px;">SAVE</button>
-                            <div style="position:absolute;width:200px;height:0px;top:225px;left:405px;"> 
+                            <div style="position:absolute;width:200px;height:0px;top:10px;left:50px;"> 
                                 <tile v-show="isLoading"></tile>
-                            </div>
-                        </div>
-                    </div>
-                    <div v-show="this.bakerInfoLogo" style="position:absolute;padding-top:70px;margin-left:470px;margin-top:-380px;width:350px;height:350px;text-align:center;vertical-align:middle;">
-                        <div style="border:2px solid #c8b08b;width:180px;height:200px;display:block;margin-left:auto;margin-right:auto;padding-top:20px;">
-                            <div id="logoBaker">
-                                <img v-bind:src="this.bakerInfoLogo">
-                            </div>
-                            <div id="nameBaker">
-                                {{this.bakerInfoName}}
                             </div>
                         </div>
                     </div>
@@ -459,64 +807,420 @@
             </section>
 
             <section id="delegatorsMobile" v-show="(menuop === 'delegators')">
-                <h5 style="margin-left:-20px;margin-top:-30px;padding-bottom:5px;">Delegators (cycle {{currentCycle - 6}})</h5>
-                <div v-show="menuop === 'delegators' && (delegators.length == 0 || configuredBakerId.length == 0)">
-                    <div id="form-todo form-group" style="position:absolute;width:100%;left:-10px;padding:0px;">
-                        <br>
-                        Please, configure your baker properties on SETTINGS to start.
+                <div style="position:absolute;height:auto;left:52%;transform: translate(-55%, 0);padding:10px;">
+                    <h5>Delegators</h5>
+                    <h6>Payout Cycle: 
+                        <input id="idCycleToPayMobile" name="cycleToPayMobile" type="text" align="center" size="2"  maxlength="10" v-model="payoutCycle" @keypress="isNumber($event)" value="payoutCycle" @change="fetchBakerDelegators(false)" placeholder="" style="text-align:center;font-size:12px;">&nbsp;
+                        <button type="button" id="idBtnOkPayoutMobile" class="botao-taps" style="margin-left:05px;width:60px !important;">OK</button>
+                        <p style="height:20px;">____________________</p>
+                    </h6>
+
+                    <div v-show="menuop === 'delegators' && (delegators.length == 0 || configuredBakerId.length == 0)">
+                        <div id="form-todo form-group" style="position:absolute;width:100%;left:-10px;padding:0px;">
+                            <br>
+                            Please, configure your baker properties on SETTINGS to start.
+                        </div>
+                    </div>
+
+                    <div v-show="menuop === 'delegators' && delegators.length > 0 && configuredBakerId.length > 0" style="width:100%;position:relative;">
+                        <div style="float:left;height:100%;" v-show="doBondPoolPayments === true && bondpoolers.length > 0">
+                            <!-- Bond Poolers -->
+                            <br>
+                            <table cellpadding="4" style="left:-15px;display:inline-block;"  v-show="doBondPoolPayments == true && bondpoolers.length > 0">
+                                <thead style="font-size:12px;border:1px solid #89CFF0;color:white;background-color:#89CFF0;">
+                                    <tr>
+                                        <th style="text-align:left;" scope="col">Bondpooler</th>
+                                        <th style="text-align:center;" scope="col">Share</th>
+                                        <th style="text-align:center;" scope="col">Earnings</th>
+                                        <th style="text-align:center;" scope="col">Fee</th>
+                                        <th style="text-align:center;" scope="col">Payout</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody style="font-size:12px;">
+                                    <tr>
+                                        <td style="font-size: 0.9em;width:10px;" align="left">{{this.bakerInfoName}}</td>
+                                        <td style="font-size: 0.9em;width:10px;" align="center">{{computedBakerPoolShare | formatPercentage}}%</td>
+                                        <td style="font-size: 0.9em;width:200px;" align="center">{{((((totalRewards - (computedTotalDelegatorsActual * ONE_MILLION)) / ONE_MILLION)) * computedBakerPoolShare) / 100 | formatTez}}</td>
+                                        <td style="font-size: 0.9em;width:10px;" align="center"></td>
+                                        <td style="font-size: 0.9em;width:10px;" align="center"></td>
+                                    </tr>
+
+                                    <tr v-for="(bondpooler,  index) in bondpoolers" :key="index">
+                                        <td style="font-size: 0.9em;width:10px;" align="left">{{bondpooler.memberName}}</td>
+                                        <td style="font-size: 0.9em;width:10px;" align="center">{{bondpooler.memberShare | formatPercentage}}%</td>
+                                        <td style="font-size: 0.9em;width:200px;" align="center">{{((((totalRewards - (computedTotalDelegatorsActual * ONE_MILLION)) / ONE_MILLION)) * bondpooler.memberShare) / 100 | formatTez}}</td>
+                                        <td style="font-size: 0.9em;width:10px;" align="center">{{bondpooler.memberFee}}%</td>
+                                        <td style="font-size: 0.9em;width:10px;" align="center">
+                                            {{(((((totalRewards - (computedTotalDelegatorsActual * ONE_MILLION)) / ONE_MILLION)) * bondpooler.memberShare) / 100) - (((((totalRewards - (computedTotalDelegatorsActual * ONE_MILLION)) / ONE_MILLION)) * bondpooler.memberShare) / 100) * (bondpooler.memberFee/100) | formatTez }}
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td style="font-size: 0.9em;width:10px;" align="left"></td>
+                                        <td style="font-size: 0.9em;width:10px;" align="center">{{(computedBakerPoolShare + computedPoolTotalShare) | formatPercentage}}%</td>
+                                        <td style="font-size: 0.9em;width:200px;" align="center">{{computedPoolTotalEarnings + (((((totalRewards - (computedTotalDelegatorsActual * ONE_MILLION)) / ONE_MILLION)) * computedBakerPoolShare) / 100) | formatTez}}</td>
+                                        <td style="font-size: 0.9em;width:10px;" align="center"></td>
+                                        <td style="font-size: 0.9em;width:10px;" align="center">{{computedPoolActualEarnings + (((((totalRewards - (computedTotalDelegatorsActual * ONE_MILLION)) / ONE_MILLION)) * computedBakerPoolShare) / 100) | formatTez}}</td>
+                                    </tr>
+
+                                </tbody>
+                            </table>
+                            <br><br>
+                            <!-- End of Bond Poolers -->
+                        </div>
+                        <div style="float:left;">
+                            <br>
+                            <table cellpadding="4">
+                                <thead style="font-size:12px;font-weight:bold;line-height:10px;">
+                                    <tr style="line-height:10px;">
+                                        <th style="text-align:left;line-height:20px;" scope="col">Delegator</th>
+                                        <th style="text-align:left;line-height:20px;" scope="col">Fee</th>
+                                        <th style="text-align:left;line-height:20px;" scope="col">Rewards</th>
+                                        <th style="text-align:left;line-height:20px;" scope="col">Pay?</th>                                
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    <tr v-for="(delegator,  index) in delegators" :key="index">
+                                        <td style="font-size: 12px;line-height:20px;" align="left">{{ delegator.address.substr(0, 6) + '...' + delegator.address.substr(delegator.address.length - 6, delegator.address.length) }}</td>
+                                        <td style="font-size: 12px;line-height:15px;display: inline-block;white-space: nowrap;" align="center">
+                                            <input id="idDelegatorFee" name="delegatorFee" type="text" align="center" size="2"  maxlength="3" v-model="feeArray[index].fee" @keypress="isNumber($event)" value="feeArray[index].fee" @change="saveSettings" placeholder="" style="text-align: center;font-size: 12px;">&nbsp;%
+                                        </td>
+                                        <td style="font-size: 12px;line-height:20px;" align="center">
+                                            {{(((totalRewards / ONE_MILLION) * (delegator.balance / stakingBalance))) - (((totalRewards / ONE_MILLION) * (delegator.balance / stakingBalance) * (feeArray[index].fee/100))) | formatTez }}{{tezSymbol}}
+                                        </td>
+                                        <td align="center" style="line-height:20px;">
+                                            <toggle-button
+                                            :value="payoutArray[index].value"
+                                            :sync="true"
+                                            :labels="true"
+                                            :disabled="false"
+                                            color="#c8b08b"
+                                            :key="index"
+                                            @change="toggle(index)" />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+  
+                        <!-- Totals -->
+                        <div style="float:left;clear:left;" v-show="(delegators.length > 0 && configuredBakerId.length > 0)">
+                            <br>
+                            <table class="table table-taps-alt">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:center;" scope="col">Total</th>
+                                        <th style="text-align:center;" scope="col"></th>
+                                        <th style="text-align:center;" scope="col"></th>
+                                        <th style="text-align:center;" scope="col"></th>
+                                        <th style="text-align:center;" scope="col">Rewards</th>
+                                        <th style="text-align:center;" scope="col"></th>
+                                        <th style="text-align:right;" scope="col">Actual</th>
+                                        <th style="text-align:center;" scope="col"></th>                                
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    <td style="font-size: 0.9em;" align="center">{{delegators.length}}</td>
+                                    <td style="font-size: 0.9em;" align="left">&nbsp;</td>
+                                    <td style="font-size: 0.9em;" align="center">&nbsp;</td>
+                                    <td style="font-size: 0.9em;" align="center"></td>
+                                    <td style="font-size: 0.9em;" align="center">{{computedTotalDelegatorsRewards | formatTez }}{{tezSymbol}}</td>
+                                    <td style="font-size: 0.9em;" align="center">&nbsp;</td>
+                                    <td style="font-size: 0.9em;" align="right">{{computedTotalDelegatorsActual | formatTez }}{{tezSymbol}}</td>
+                                    <td align="center">&nbsp;</td>
+                                </tbody>
+                            </table>
+                            <br><br>
+                        </div>
+                        <!-- Totals -->
+
                     </div>
                 </div>
-                <div v-show="menuop === 'delegators' && delegators.length > 0 && configuredBakerId.length > 0">
-                    <div id="form-todo form-group" style="width:100%;">
-                        <table cellpadding="4" style="position:absolute;left:-10px;">
-                            <thead style="font-size:12px;font-weight:bold;line-height:10px;">
-                                <tr style="line-height:10px;">
-                                    <th style="text-align:left;line-height:20px;" scope="col">Delegator</th>
-                                    <th style="text-align:left;line-height:20px;" scope="col">Fee</th>
-                                    <th style="text-align:left;line-height:20px;" scope="col">Rewards</th>
-                                    <th style="text-align:left;line-height:20px;" scope="col">Pay?</th>                                
-                                </tr>
-                            </thead>
+            </section>
 
-                            <tbody>
-                                <tr v-for="(delegator,  index) in delegators" :key="index">
-                                    <td style="font-size: 12px;line-height:20px;" align="left">{{ delegator.address.substr(0, 6) + '...' + delegator.address.substr(delegator.address.length - 6, delegator.address.length) }}</td>
-                                    <td style="font-size: 12px;line-height:15px;display: inline-block;white-space: nowrap;" align="center">
-                                        <input id="idDelegatorFee" name="delegatorFee" type="text" align="center" size="2"  maxlength="3" v-model="feeArray[index].fee" @keypress="isNumber($event)" value="feeArray[index].fee" @change="saveSettings" placeholder="" style="text-align: center;font-size: 12px;">&nbsp;%
-                                    </td>
-                                    <td style="font-size: 12px;line-height:20px;" align="center">
-                                        {{(((totalRewards / ONE_MILLION) * (delegator.balance / stakingBalance))) - (((totalRewards / ONE_MILLION) * (delegator.balance / stakingBalance) * (feeArray[index].fee/100))) | formatTez }}{{tezSymbol}}
-                                    </td>
-                                    <td align="center" style="line-height:20px;">
-                                        <toggle-button
-                                        :value="payoutArray[index].value"
-                                        :sync="true"
-                                        :labels="true"
-                                        :disabled="false"
-                                        color="#c8b08b"
-                                        :key="index"
-                                        @change="toggle(index)" />
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+            <section id="csvbatchMobile" v-show="menuop === 'csvbatch'">
+                <div style="position:absolute;left:50%;top:200px;transform: translate(-55%, -50%);padding:10px;">
+                    <h5 style="margin-left:-10px;margin-top:-20px;">CSV Batch</h5>
+                    <div v-show="menuop === 'csvbatch' && configuredBakerId.length == 0">
+                        <div id="form-todo form-group" style="width:100%;">
+                            <br>
+                            Please, configure your baker properties on SETTINGS to start.
+                        </div>
                     </div>
-                    <br><br>
+                    <div v-show="menuop === 'csvbatch' && configuredBakerId.length > 0">
+                        <div id="form-todo form-group" style="width:100%;left:-10px;padding:0px;font-size:12px;">
+                            Import a standard CSV file as source<br>for a manual batch operation.<br>
+                            <br>
+                            Requirements:<br>
+                            <br>
+                            <ul>
+                                <li>
+                                    Delimiter must be a comma (",").<br>
+                                </li>
+                                <li>
+                                    Only two columns, without headers.<br>
+                                </li>
+                                <li>
+                                    First column: destination address.<br>
+                                </li>
+                                <li>
+                                    Last column: amount in militez (1000000 = 1 tez).<br>
+                                </li>
+                            </ul> 
+                            Sample File:<br><br>
+                            <table cellspacing="0" cellpadding="2" style="margin-left:5px;border:1px solid black;">
+                                <tr>
+                                    <td>tz1S37hEZnNrAXfzuRYSjG9Qxq8VrwpWaukB,1000000</td>
+                                </tr>
+                                <tr>
+                                    <td>tz1ZvZLYPYoH2Xm4tX1xprqLZZnXc1kYM4ji,3000000</td>
+                                </tr>
+                                <tr>   
+                                    <td>KT1XFqZeHDPw4TmkjgCN5knsYvZYGj2r5c3F,2500000</td>
+                                </tr>
+                            </table>
+                            <br><br>
+
+                            <div style="border-style:none;height:auto;">
+                                <input type="file" ref="doc" @change="readFile()" accept=".csv,.CSV,.txt,.TXT" />
+                                
+                                <br><br><br>
+
+                                <table class="table table-taps-alt" v-show="parsedCsv != null">
+                                    <thead class="head-table-taps">
+                                    <tr>
+                                        <th style="text-align:center;" scope="col"></th>
+                                        <th style="text-align:left;" scope="col">Destination Address</th>
+                                        <th style="text-align:center;" scope="col">Amount</th>
+                                    </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        <tr v-for="(row,  index) in parsedCsv" :key="index">
+                                        <td style="font-size: 0.9em;" align="center">{{index + 1}}</td>
+                                        <td style="font-size: 0.9em;" align="left">{{row[0]}}</td>
+                                        <td style="font-size: 0.9em;" align="center">{{row[1] / ONE_MILLION}}&nbsp;{{tezSymbol}}</td> 
+                                        </tr>
+
+                                        <tr>
+                                            <td align="left"><b>Total</b></td>
+                                            <td align="left"></td>
+                                            <td align="center"><b>{{computedTotalSumCsv / ONE_MILLION}}&nbsp;{{tezSymbol}}</b></td>
+                                        </tr>
+
+                                    </tbody>
+
+                                </table>
+
+                                <div v-show="parsedCsv != null">
+                                    <button v-on:click="createCustomCsvBatchTransaction()" id="idBtnSendBatch" type="button" style="width:125px;height:40px;display:inline;margin-left:0px;">SEND BATCH</button>
+                                    <br><br><br><br><br>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="bondpoolMobile" class="box-content-rewards" v-show="menuop === 'bondpool'">
+                <div style="position:absolute;height:auto;left:52%;transform: translate(-50%, 0);padding:10px;">
+                    <h5>Bond Pool</h5>
+                    <div v-show="menuop === 'bondpool' && configuredBakerId.length == 0">
+                        <div id="form-todo form-group" style="width:100%;">
+                            <br>
+                            Please, configure your baker properties on SETTINGS to start.
+                        </div>
+                    </div>
+                    <div v-show="menuop === 'bondpool' && configuredBakerId.length > 0">
+                        <div style="width:100%;left:0px;font-size:12px;">
+                            Configure your bond pool<br>
+                            <br>
+                            <input type="checkbox" id="idDoBondPoolPayments" v-model="doBondPoolPayments" value="doBondPoolPayments" @click="toggleBondPoolPayments()" />&nbsp;&nbsp;&nbsp;Do bond pool payments on every distribution
+                            <br>
+                            <br>
+                            Distribute cycle rewards income remaining funds<br>
+                            (after delegators have been paid) among configured<br>
+                            private participants of the baker.<br>
+                            <br>
+                            Add/update/remove members
+                            <br><br>
+
+                            <div style="width:80%;height:auto;margin-left:0px;margin-top:0px;border:none;">
+                                <table>
+                                    <tr style="height:50px;">
+                                        <td><input type="text" id="idAddress" v-model="memberAddress" placeholder="Address" style="padding-right:5px;display:inline-block;text-align:left;width:320px;" class="form-control input-taps"></td>
+                                    </tr>
+                                    <tr style="height:50px;">
+                                        <td><input type="text" id="idAmount" v-model="memberAmount" @keypress="isNumber($event)" maxlength="20" placeholder="Amount (XTZ)" style="padding:5px;display:inline-block;text-align:left;width:320px;" class="form-control input-taps"></td>
+                                    </tr>
+                                    <tr style="height:50px;">
+                                        <td><input type="text" id="idFee" v-model="memberFee" @keypress="isNumber($event)" maxlength="3" placeholder="Fee (%)" size="5" style="padding:5px;display:inline-block;text-align:left;width:320px;" class="form-control input-taps"></td>
+                                    </tr>
+                                    <tr style="height:50px;">
+                                        <td><input type="text" id="idName" v-model="memberName" placeholder="Member name" style="padding:5px;display:inline-block;text-align:left;width:320px;" class="form-control input-taps"></td>
+                                    </tr>
+                                    <tr style="height:50px;">
+                                        <td align="center"><input type="button" @click="addBondPoolMember()" class="add-row" value="ADD" style="margin-top:30px;margin-bottom:20px;padding:5px;display:inline-block;text-align:center;width:50px;"></td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <br>
+
+                            <table class="table table-taps-fees" id="id_members" style="width:96%;">
+                                    <thead>
+                                    <tr>
+                                        <th style="text-align:left;" scope="col">Address</th>
+                                        <th style="text-align:center;" scope="col">Amount (XTZ)</th>
+                                        <th style="text-align:left;" scope="col">Fee (%)</th>
+                                        <th style="text-align:left;" scope="col">Name</th>
+                                        <th style="text-align:center;" scope="col"></th>
+                                    </tr>
+                                </thead>
+
+                                <tbody class="members_class" id="idMembers">
+                                    <tr style="line-height:80px;font-size:13px;" v-show="bondpoolers != null && bondpoolers.length == 0">
+                                        <td colspan="7" id="id_nomembers">
+                                            <center>There are no bond pool members registered yet</center>
+                                        </td>
+                                    </tr>
+
+                                    <tr v-for="(bondpooler,  index) in bondpoolers" :key="index">
+                                        <td align="left">
+                                            <input name="memberAddress" id="idMemberAddress" v-model="bondpooler.memberAddress" type="text" readonly style="border:none;background:none;width:50px;">
+                                        </td>
+
+                                        <td align="center" >
+                                            <input name="memberAmount" id="idMemberAmount" size="5" maxlength="20" v-model="bondpooler.memberAmount" v-on:focus="processMemberAmount($event, index)" ref="myMemberAmountInput" @keypress="isNumber($event)" @keyup="isValidAmount($event, bondpooler.memberAmount, index)" type="text" style="text-align:right;width:50px;" class="name_amount">
+                                        </td>
+
+                                        <td align="center" >
+                                            <input name="memberFee" id="idMemberFee" size="5" maxlength="3" v-model="bondpooler.memberFee" @keypress="isNumber($event)" @keyup="isValidPercentage($event, bondpooler.memberFee, index)" type="text" style="text-align:right;width:30px;">
+                                        </td>
+
+                                        <td align="center">
+                                            <input name="memberName" id="idMemberName" v-model="bondpooler.memberName" @keyup="isValidName($event, bondpooler.memberName)" type="text" style="width:60px;">
+                                        </td>
+
+                                        <td align="left">
+                                            <img :src="images.delete" style="cursor:pointer;margin-top:-3px;margin-left:-15px;margin-right:30px;" width="30" height="30" @click="removeBondPoolMember(index)" />
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+                            </table>
+                            <br><br>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="box-content-rewards" id="governanceMobile" v-show="(menuop === 'governance')">
+                    <div v-show="menuop === 'governance'" style="position:absolute;height:auto;left:52%;transform: translate(-50%, 0);padding:10px;">                        
+                    <h5>Governance</h5>
+                    <h6 style="padding-bottom:10px;margin-top:-10px;margin-left:2px;">Tezos Proposals Voting</h6>
+                    <div v-show="menuop === 'governance' && configuredBakerId.length == 0">
+                        <div id="form-todo form-group" style="width:100%;padding-left:20px;">
+                            <br>
+                            Please, configure your baker properties on SETTINGS to start.
+                        </div>
+                    </div>
+                    <div v-show="menuop === 'governance' && configuredBakerId.length > 0" id="form-todo form-group" style="width:400px;left:0px;font-size:12px;height:auto;padding-top:0px;padding-left:10px;padding-bottom:30px;">
+                        <div v-for="(proposal,  index) in proposals" :key="index" v-show="true">
+                            <br>
+                            <table style="border:1px solid black;width:90%;padding:5px;">
+                                <thead>
+                                    <tr style="background-color:#c5a87c;color:white;">
+                                        <th style="border:1px solid black;text-align:left;padding:5px;" scope="col">Name</th>
+                                        <th style="border:1px solid black;text-align:left;padding:5px;" scope="col">Status</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    <tr>
+                                        <td style="border:1px solid black;font-size: 0.9em;width:50px;padding:10px;" align="center">{{capitalizeFirstLetter(proposal.alias)}}</td>
+                                        <td style="border:1px solid black;font-size: 0.9em;width:50px;padding:10px;" align="center">{{capitalizeFirstLetter(proposal.status)}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <br><br>
+                            <table style="border:1px solid black;width:90%;padding:5px;">
+                                <thead>
+                                    <tr style="background-color:#c5a87c;color:white;">
+                                        <th style="border:1px solid black;text-align:left;padding:5px;" scope="col">Hash</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    <tr>
+                                        <td style="border:1px solid black;font-size: 0.9em;width:50px;padding:10px;" align="center">{{proposal.hash}}</td>                                    </tr>
+                                </tbody>
+                            </table>
+                            <br><br>
+                            <table v-show="proposal.status === 'active'" style="border: 1px solid black;width:90%;padding:5px;">
+                                <thead>
+                                    <tr style="background-color:#c5a87c;color:white;">
+                                        <th style="border:1px solid black;text-align:left;padding:5px;" scope="col">Period</th>
+                                        <th style="border:1px solid black;text-align:left;padding:5px;" scope="col">Start Time</th>
+                                        <th style="border:1px solid black;text-align:left;padding:5px;" scope="col">End Time</th>
+                                    </tr>
+                                    </thead>
+
+                                <tbody>
+                                    <tr>
+                                        <td style="border:1px solid black;font-size: 0.9em;width:30%;padding:10px;" align="center">{{capitalizeFirstLetter(currentProposalKind)}}</td>
+                                        <td style="border:1px solid black;font-size: 0.9em;width:40%;padding:10px;" align="center">{{dateBackFrom(currentProposalStartTime)}}</td>
+                                        <td style="border:1px solid black;font-size: 0.9em;width:30%;padding:10px;" align="center">{{dateForwardTo(currentProposalEndTime)}}</td> 
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <br><br>
+                            <div v-show="proposal.status === 'active'" style="position:relative;height:100px;;margin-top:5px;text-align:center;width:290px;">
+                                <div style="width:auto;display:inline-block;padding:20px;">Cast vote:</div>
+                                <img :src="images.yay" class="clickable" alt="Yay" v-on:click="vote(configuredBakerId, proposal.hash, 'yay', proposal.kind, index)" style="padding-right:10px;">
+                                <img :src="images.nay" class="clickable" alt="Nay" v-on:click="vote(configuredBakerId, proposal.hash, 'nay', proposal.kind, index)" style="padding-right:10px;" v-show="proposal.kind != 'proposal'">
+                                <img :src="images.pass" class="clickable" alt="Pass" v-on:click="vote(configuredBakerId, proposal.hash, 'pass', proposal.kind, index)" style="padding-right:10px;" v-show="proposal.kind != 'proposal'">
+                            </div>
+                            <div v-show="proposals[index].myVoteCommand.length > 0">
+                                <div style="position:relative;width:90%;margin-top:-20px;margin-bottom:50px;border:1px solid black;padding:10px;display:inline-block;font-size:14px;">
+                                    <textarea type="text" ref="myVoteInput" v-model="proposals[index].myVoteCommand" style="width:90%;border:none;height:90px;resize:none;" readonly />
+                                    <button 
+                                        type="button"
+                                        v-clipboard:copy="proposals[index].myVoteCommand"
+                                        v-clipboard:success="onCopy"
+                                        v-clipboard:error="onError"
+                                        style="position:relative;margin-left:120px;top:65px;width:95px;height:40px;display:inline-block;margin-top:-25px;">
+                                    COPY
+                                    </button>
+                                </div>                                
+                            </div>
+                        <div>
+                            <hr style="margin-left:-50px;color:black;">
+                        </div>
+                        </div>
+                    </div>                    
                 </div>
             </section>
 
             <section id="resetMobile" v-show="(menuop === 'reset')">
                 <div v-show="menuop === 'reset'">
-                    <h5>Reset</h5>
-                    <span style="padding-bottom:10px;margin-top:-30px;margin-left:2px;font-size:13px;">Taps cleanup</span>
-                    <div id="form-todo form-group" style="width:100%;height:300px;padding-top:20px;padding-left:10px;font-size:12px;">
-                        <span>Reset to a factory-default state, cleaning up all settings changed in configuration.</span>
-                        <br><br><br>
-                        <button id="idBtnFactoryReset" type="button" @click="doFactoryReset" style="width:95px;height:40px;display:inline;margin-left:0px;">RESET</button>
-                    </div>                    
+                    <div style="position:absolute;width:300px;left:50%;top:200px;transform: translate(-55%, -50%);padding:10px;">
+                        <h5>Reset</h5>
+                        <span style="padding-bottom:10px;margin-top:-30px;margin-left:2px;font-size:13px;">Taps cleanup</span>
+                        <div id="form-todo form-group" style="width:100%;height:300px;padding-top:20px;padding-left:10px;font-size:12px;">
+                            <span>Reset to a factory-default state, cleaning up all settings changed in configuration.</span>
+                            <br><br><br>
+                            <button id="idBtnFactoryReset" type="button" @click="doFactoryReset" style="width:95px;height:40px;display:inline;margin-left:0px;">RESET</button>
+                        </div>
+                    </div>
                 </div>
             </section>
-
 
         </div>
     </div>
@@ -532,12 +1236,15 @@ import numeral from 'numeral';
 import { TezosToolkit, OpKind } from "@taquito/taquito";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import jsPDF from 'jspdf';
+import { formatDistance, parseISO } from 'date-fns';
 
 // Constants.
 const ONE_MILLION = 1000000;
 const TEZ_SYMBOL = 'ꜩ';
 const GET_TEZOS_HEAD_URL = 'https://api.tzkt.io/v1/head';
 const GET_TEZOS_REWARDS_SPLIT_URL = 'https://api.tzkt.io/v1/rewards/split/';
+const GET_PROPOSALS_LIST_URL = 'https://api.tzkt.io/v1/voting/proposals';
+const GET_PROPOSALS_CURRENT_URL = 'https://api.tzkt.io/v1/voting/periods/current';
 const TEZOS_REWARDS_SPLIT_RESPONSE_LIMIT = '10000';
 const CHECK_RPC_ONLINE_SUFFIX = '/chains/main/blocks/head/';
 const GET_BAKER_INFO_URL = 'https://api.baking-bad.org/v2/bakers/';
@@ -576,14 +1283,30 @@ export default {
             bakerInfoName: '',
             bakerInfoLogo: '',
             bakerInfoFee: '',
+            bakerBalance: 0,
+            fileContent: null,
+            parsedCsv: null,
             // User configured values.
             configuredRpcProvider: TEZOS_RPC_PROVIDER_01,
             configuredDelegatorFee: '10',
             configuredMinAcceptedDelegatedAmount: '0.01',
             configuredMinTransactionAmount: '0.0001',
-            configuredBakerId: '',            
+            configuredBakerId: '',
+            myCsvFile: '',
+            csvBatchTablePosition: '',
+            memberAddress: '',
+            memberAmount: '',
+            memberShare: 0,
+            memberFee: '',
+            memberName: '',
+            previousMemberAmount: '',
             // Flow control variables.
-            isMobile: false,
+            doBondPoolPayments: false,
+            poolTotalBalance: 0,
+            poolTotalShare: 0,
+            poolTotalEarnings: 0,
+            poolTotalActual: 0,
+            isMobile: true,
             isConnected : false,
             isRpcProviderOnline: false,
             tapsStatus: false,
@@ -594,14 +1317,23 @@ export default {
             isLoading: false,
             // Tezos blockchain related values.
             currentCycle: 0,
+            payoutCycle: 0,
             stakingBalance: 0,
             totalRewards: 0,
             totalDelegators: 0,
+            currentProposalStartTime: '',
+            currentProposalEndTime: '',
+            currentProposalKind: '',
+            currentProposalStatus: '',
+            myVoteCommand: '',
             // Data structures.
             delegators: [],
             feeArray: [],
             payoutArray: [],
             myBatchArray: [],
+            bondpoolers: [],
+            proposals:[],
+            governancePeriods:[],
             providers: [
                           { value: TEZOS_RPC_PROVIDER_01, text: TEZOS_RPC_PROVIDER_01 },
                           { value: TEZOS_RPC_PROVIDER_02, text: TEZOS_RPC_PROVIDER_02 },
@@ -622,7 +1354,10 @@ export default {
                 delete: require('../assets/imgs/delete.png'),
                 settings: require('@/assets/imgs/settings.svg'),
                 logout: require('@/assets/imgs/logout.svg'),
-                aqueduct: require('@/assets/imgs/aqueduct.jpg')
+                aqueduct: require('@/assets/imgs/aqueduct.jpg'),
+                yay: require('../assets/imgs/thumbs_up.png'),
+                nay: require('../assets/imgs/thumbs_down.png'),
+                pass: require('../assets/imgs/abstain.png')
             }
         };
     },  
@@ -634,14 +1369,21 @@ export default {
             var x = document.getElementById("myLinks");
             var y = document.getElementById("topnav");
 
-            if (x.style.display === "none") {
-                x.style.display = "inline-block";
-                y.style.height = "345px";
-            } else {
-                x.style.display = "none";
-                y.style.height = "55px";
+            if ((x != null)&&(y != null))
+            {
+                if (x.style.display === "none") {
+                    x.style.display = "inline-block";
+                    x.style.left = "200px";
+                    y.style.height = "500px";
+                } else {
+                    x.style.display = "none";
+                    y.style.height = "55px";
+                }
             }
-            }, 
+
+
+
+        }, 
 
 
         // Specifies which page will be shown upon user menu selection.
@@ -657,7 +1399,8 @@ export default {
             this.feeArray = [];
             this.payoutArray = [];
             this.myBatchArray = [];
-            this.delegators = [];            
+            this.delegators = [];
+            this.bondpoolers = [];            
             this.tapsStatus = false;
             this.totalDelegators = 0;
             this.isRpcProviderOnline = false;
@@ -674,6 +1417,12 @@ export default {
             this.bakerInfoName = '';
             this.bakerInfoLogo = '';
             this.bakerInfoFee = '';
+            this.doBondPoolPayments = false;
+            this.memberAddress = '';
+            this.memberAmount = '';
+            this.memberShare = '';
+            this.memberFee = '';
+            this.memberName = '';
         },
         // Bring back default values to configuration.
         cleanupSettings() 
@@ -682,13 +1431,20 @@ export default {
             this.feeArray = [];
             this.payoutArray = [];
             this.myBatchArray = [];
-            this.delegators = [];            
+            this.delegators = [];
+            this.bondpoolers = [];
             this.tapsStatus = false;
             this.configuredBakerId = '';
             this.configuredRpcProvider = '',
             this.configuredDelegatorFee = '';
             this.configuredMinAcceptedDelegatedAmount = '';
             this.configuredMinTransactionAmount = '';
+            this.doBondPoolPayments = false;
+            this.memberAddress = '';
+            this.memberAmount = '';
+            this.memberShare = '';
+            this.memberFee = '';
+            this.memberName = '';
         },
         // Stores current configuration on browser's local storage.
         saveSettings() 
@@ -704,6 +1460,8 @@ export default {
                 localStorage.setItem('tapsConfiguredMinTransactionAmount', this.configuredMinTransactionAmount);
                 localStorage.setItem("tapsFeeArray", JSON.stringify(this.feeArray));
                 localStorage.setItem("tapsPayoutArray", JSON.stringify(this.payoutArray));
+                localStorage.setItem("tapsBondpoolersArray", JSON.stringify(this.bondpoolers));
+                localStorage.setItem('tapsDoBondPoolPayments', JSON.stringify(this.doBondPoolPayments));
             }
 
         },
@@ -747,6 +1505,16 @@ export default {
 
             // Reloads previously tailored payouts array.
             this.payoutArray = JSON.parse(localStorage.getItem("tapsPayoutArray"));
+
+            // Reloads previously tailored bond poolers array.
+            this.bondpoolers = JSON.parse(localStorage.getItem("tapsBondpoolersArray"));
+            if (this.bondpoolers == null)
+            {
+                this.bondpoolers = [];
+            }
+
+            // Gets bond pool payments previosly stored configuration.
+            this.doBondPoolPayments = JSON.parse(localStorage.getItem('tapsDoBondPoolPayments'));
 
             this.toggleStatus();
         },
@@ -853,8 +1621,9 @@ export default {
                 axios
                 .get(GET_TEZOS_HEAD_URL)
                 .then(response => ( this.currentCycle = response.data.cycle,
+                                    this.payoutCycle == 0 ? this.payoutCycle = this.currentCycle - 6 : this.payoutCycle,
                                     axios
-                                        .get(GET_TEZOS_REWARDS_SPLIT_URL + this.configuredBakerId + '/' + parseInt(this.currentCycle - 6) + '?limit=' + TEZOS_REWARDS_SPLIT_RESPONSE_LIMIT)
+                                        .get(GET_TEZOS_REWARDS_SPLIT_URL + this.configuredBakerId + '/' + parseInt(this.payoutCycle == 0 ? (this.currentCycle - 6) : this.payoutCycle) + '?limit=' + TEZOS_REWARDS_SPLIT_RESPONSE_LIMIT)
                                         .then(response => (
                                                             this.totalDelegators = response.data.delegators.length,
                                                             this.delegators = response.data.delegators,
@@ -913,7 +1682,8 @@ export default {
                 .get(GET_BAKER_INFO_URL + address)
                 .then(response => ( this.bakerInfoName = response.data.name,
                                     this.bakerInfoLogo = response.data.logo,
-                                    this.bakerInfoFee = (response.data.fee * 100)
+                                    this.bakerInfoFee = (response.data.fee * 100),
+                                    this.bakerBalance = response.data.balance
                                 ) )
                                 .catch(error => { console.log(error) })
             }
@@ -1073,9 +1843,35 @@ export default {
  
                 // Asks for user's confirmation.
                 this.$confirm("Proceed with rewards " + (this.tapsStatus == true ? "distribution" : "simulation") + " now?").then(() => {
-            
+
                 // Cleans up the batch array.
                 this.myBatchArray = [];
+
+                // Bondpoolers distribution.
+                if (this.doBondPoolPayments == true)
+                {
+                    if (this.bondpoolers != null)
+                    {
+                        // Iterates over the bondpoolers list to calculate values that will be added to the transaction. 
+                        for (var p=0;p<this.bondpoolers.length;p++)
+                        {
+                            // Main calculations (done for each bondpooler).
+                            let bondpooler = this.bondpoolers[p];
+                            let amount = Math.round(((((this.totalRewards - (this.computedTotalDelegatorsActual * ONE_MILLION))) * bondpooler.memberShare) / 100) - ((((this.totalRewards - (this.computedTotalDelegatorsActual * ONE_MILLION))) * bondpooler.memberShare) / 100) * (bondpooler.memberFee/100));
+
+                            let bondpoolElement = {
+                                            kind: OpKind.TRANSACTION, 
+                                            to: bondpooler.memberAddress, 
+                                            amount: amount,
+                                            mutez: true
+                                        }; 
+
+                            // Compounds the batch array that will be sent to the connected wallet.
+                            this.myBatchArray.push(bondpoolElement);
+                        }
+                    }
+                }
+                // End of Bondpoolers distribution.
 
                 // Iterates over the delegators list to calculate values that will be added to the transaction. 
                 for (var k=0;k<this.totalDelegators;k++)
@@ -1086,8 +1882,8 @@ export default {
                     let shareValue = (this.totalRewards * sharePercent);
                     let delegatorFeePercent = (this.feeArray[k].fee/100);
                     let delegatorFeeValue = (shareValue * delegatorFeePercent);
-                    let shareValueAfterFee = Math.round(shareValue - delegatorFeeValue);
-
+                    let shareValueAfterFee = Math.round((shareValue - delegatorFeeValue));
+ 
                     // Only adds to batch array IF "Pay?" checkbox is enabled (user filters).
                     if (this.payoutArray[k].value == true)
                     {
@@ -1156,7 +1952,6 @@ export default {
            else
            {
                 // Builds contents for the PDF file.
-                var payoutCycle = this.currentCycle - 6;
 
                 const doc = new jsPDF();
                 doc.setFontSize(38);
@@ -1166,69 +1961,190 @@ export default {
                 doc.setFontSize(8);
                 doc.text(30, 40, "   A tool for bakers");
                 doc.setFontSize(12);
-                doc.text(68, 70, "SIMULATION REPORT FOR CYCLE " + payoutCycle);
+                doc.text(68, 70, "SIMULATION REPORT FOR CYCLE " + this.payoutCycle);
 
                 doc.setFontSize(10);
                 doc.setFont("courier");
-          
-                let maxRowsPerPage = 50;
-                let numPages = (Math.round(myBatchArray.length / maxRowsPerPage)) + 1;
+
                 let currentPage = 1;
-                let sum = 0;
+                let delegatorsSum = 0;
+                let bondpoolersSum = 0;
                 let text = '';
-                let initRow = 0;
-                let endRow = 0;
-                let offsetY = 0;
-                for (var v=1;v<=numPages;v++)
+                let offsetY = 90;
+
+                for (var v=0;v<myBatchArray.length;v++)
                 {
                     text = '';
-                    currentPage = v;
-                    initRow = (maxRowsPerPage * v) - maxRowsPerPage;
+                    let amount = myBatchArray[v].amount;
 
-                   if (v == 1)
+                    if (this.doBondPoolPayments === true)
                     {
-                        endRow = maxRowsPerPage - 10;
-                        offsetY = 90;
+                        if (this.bondpoolers != null)
+                        {
+                            if (v<this.bondpoolers.length)
+                            {
+                                bondpoolersSum = bondpoolersSum + amount;
+                            }
+                            else
+                            {
+                                delegatorsSum = delegatorsSum + amount;    
+                            }
+                        }
                     }
                     else
                     {
-                        endRow = initRow + (maxRowsPerPage + 10);
-                        offsetY = 30;
-                    }
- 
-                    if (endRow > myBatchArray.length)
-                    {
-                        endRow = myBatchArray.length;
+                        delegatorsSum = delegatorsSum + amount;
                     }
 
-                    for (var g=initRow;g<endRow;g++)
+                    let amountString = (amount / (ONE_MILLION)).toFixed(6).toString();
+                    let amountLen = amountString.length;
+                    let recipient = myBatchArray[v].to;
+                    let spaces = 20 - amountLen;
+                    let mySpaceString = Array(spaces).join(" ");
+                    text = text + recipient + mySpaceString + amountString + "tz \n";
+                    mySpaceString = [];
+
+                    if (this.doBondPoolPayments === true)
                     {
-                        let amount = myBatchArray[g].amount / (ONE_MILLION);
-                        sum = sum + amount;
-                        let amountLen = (amount.toString().length) + 2;
-                        let recipient = myBatchArray[g].to;
-                        let spaces = 20 - amountLen;
-                        let mySpaceString = Array(spaces).join(" ");
-                        text = text + recipient + mySpaceString + amount + "tz \n";
-                        mySpaceString = [];
+                        if (this.bondpoolers != null)
+                        {
+                            if ((v == this.bondpoolers.length)&&(this.bondpoolers.length > 0))
+                            {
+                                doc.text(50, offsetY, "----------------------------------------------------------------------");
+                                offsetY += 5;
+                            }
+                        }
                     }
+
                     doc.text(50, offsetY, text + "\n");
-                    text = '';
 
-                    if (currentPage < numPages-1)
-                        doc.addPage();
-                    else if (currentPage == numPages)
+
+                    text = '';
+                    offsetY += 5;
+
+                    if (currentPage == 1)
                     {
-                        text = text + "\n\n" + "                                    Total : " + sum + "tz";
-                        doc.text(30, 250, text);
+                        if (offsetY > 260)
+                        {
+                            doc.addPage();
+                            offsetY = 30;
+                            currentPage++;
+                        }
                     }
+                    else
+                    {
+                        if (offsetY > 270)
+                        {
+                            doc.addPage();
+                            offsetY = 30;
+                            currentPage++;
+                        }
+                    }
+
 
                 }
-                let filename = "taps_simulation_cycle_" + payoutCycle + ".pdf" 
+                text = text + "\n\n";
+                text = text + "   ----------------------------------------------------------------------\n";
+     
+                if (this.bondpoolers != null)
+                {
+                    if ((this.doBondPoolPayments === true)&&(this.bondpoolers.length > 0))
+                    {
+                        let amountString = (bondpoolersSum / (ONE_MILLION)).toFixed(6).toString();
+                        let amountLen = amountString.length;
+                        let spaces = 20 - amountLen;
+                        let mySpaceString = Array(spaces).join(" ");
+                        text = text + "                          Bondpoolers total : " + mySpaceString + amountString + "tz \n";
+                        amountString = (delegatorsSum / (ONE_MILLION)).toFixed(6).toString();
+                        amountLen = amountString.length;
+                        spaces = 20 - amountLen;
+                        mySpaceString = Array(spaces).join(" ");
+                        text = text + "                          Delegators total  : " + mySpaceString + amountString + "tz \n";
+                    }
+                }
+                    let amountString = ((bondpoolersSum / (ONE_MILLION)) + (delegatorsSum / (ONE_MILLION))).toFixed(6).toString();
+                    let amountLen = amountString.length;
+                    let spaces = 20 - amountLen;
+                    let mySpaceString = Array(spaces).join(" ");
+                    text = text + "                          Total sum         : " + mySpaceString + amountString + "tz \n";
+
+                    doc.text(30, offsetY, text);
+ 
+                
+                let filename = "taps_simulation_cycle_" + this.payoutCycle + ".pdf" 
 
                 doc.save(filename);
            }
 
+        },
+        // Creates a batch transaction based on a custom CSV file upon user request.
+        createCustomCsvBatchTransaction() 
+        {
+
+            // Asks for user's confirmation.
+            this.$confirm("Confirm sending of custom CSV Batch now?").then(() => {
+    
+            // Cleans up the batch array.
+            this.myBatchArray = [];
+
+            // Iterates over the recipients to be added to the transaction.
+            for (var r=0;r<this.parsedCsv.length;r++)
+            {            
+                let element = {
+                                kind: OpKind.TRANSACTION, 
+                                to: this.parsedCsv[r][0], 
+                                amount: this.parsedCsv[r][1], 
+                                mutez: true  
+                                }; 
+
+
+                // Compounds the batch array that will be sent to the connected wallet.
+                this.myBatchArray.push(element);
+
+            }
+  
+            // Sends the batch operation.
+            this.sendCustomCsvBatch(this.myBatchArray);
+
+            });
+            
+       },
+       // Sends a batch array based on a custom CSV file to the configured wallet.
+       async sendCustomCsvBatch(myBatchArray) 
+       {
+
+            try
+            {
+
+                const batch = this.Tezos.wallet.batch(myBatchArray);
+                const batchOp = await batch.send();
+                console.log('Batch operation hash : ', batchOp.hash);
+                await batchOp.confirmation(1); // The parameter is the number of confirmations to wait for.
+
+                this.$fire({
+                title: "Batch Sent!",
+                text: "Wallet confirmed successful operation",
+                type: "success",
+                timer: 5000
+                }).then(r => {
+                console.log(r.value);
+                })
+
+            }
+            catch(error)
+            {
+                console.log(error);
+                
+                this.$fire({
+                title: "Operation canceled",
+                text: "Wallet returned an error",
+                type: "error",
+                timer: 10000
+                }).then(r => {
+                console.log(r.value);
+                })
+                
+            }
         },
         // Initializes arrays.
         initializeArrays()
@@ -1341,6 +2257,80 @@ export default {
                 this.msg['configuredRpcProvider'] = '';
             }
         },
+        validateBondpoolerAddress(value)
+        {
+
+            if (value.length == 0)
+            {
+                this.msg['memberAddress'] = 'Invalid address';
+            }
+            else if (value.length != 36)
+            {
+                this.msg['memberAddress'] = 'Invalid address';
+            }
+            else if ((value.toLowerCase().substr(0,2) != 'tz') && (value.toLowerCase().substr(0,2) != 'kt') )
+            {
+                this.msg['memberAddress'] = 'Invalid address';
+            }
+            else if (value.toLowerCase() == this.configuredBakerId.toLowerCase())
+            {
+                this.msg['memberAddress'] = 'same baker address';
+            }
+            else if (this.memberExists(value.toLowerCase()) == true)
+            {
+                this.msg['memberAddress'] = 'repeated address';
+            }
+            else 
+            {
+                this.msg['memberAddress'] = '';
+            }
+        },
+        validateBondpoolerAmount(value)
+        {
+            if (value.length == 0)
+            {
+                this.msg['memberAmount'] = 'Invalid amount';
+            }
+            else if (value == 0)
+            {
+                this.msg['memberAmount'] = 'Invalid amount';
+            }
+            else if (this.bondpoolOverflow(value) == true)
+            {
+                this.msg['memberAmount'] = 'Amount overflow';
+            }
+            else 
+            {
+                this.msg['memberAmount'] = '';
+            }
+        },
+        validateBondpoolerFee(value)
+        {
+
+            if (value.length == 0)
+            {
+                this.msg['memberFee'] = 'Invalid fee';
+            }
+            else if (parseFloat(value) > 100)
+            {
+                this.msg['memberFee'] = 'Invalid percentage';
+            }
+            else 
+            {
+                this.msg['memberFee'] = '';
+            }
+        },
+        validateBondpoolerName(value)
+        {
+            if ((value.length == 0)||(value.trim() == ''))
+            {
+                this.msg['memberName'] = 'Invalid name';
+            }
+            else 
+            {
+                this.msg['memberName'] = '';
+            }
+        },
         doFactoryReset()
         {
 
@@ -1359,6 +2349,8 @@ export default {
                 localStorage.removeItem('tapsConfiguredMinTransactionAmount');
                 localStorage.removeItem("tapsFeeArray");
                 localStorage.removeItem("tapsPayoutArray");
+                localStorage.removeItem("tapsBondpoolersArray");
+                localStorage.removeItem("tapsDoBondPoolPayments");
 
                 // Exits.
                 this.disconnect();
@@ -1401,6 +2393,426 @@ export default {
 
             // If all fails...
             evt.preventDefault();
+        },
+        isValidPercentage: function(evt, value, index)
+        {
+            evt = (evt) ? evt : window.event;
+            var charCode = (evt.which) ? evt.which : evt.keyCode;
+            if ((charCode > 31 && (charCode < 48 || charCode > 57)) && charCode !== 46) 
+            {
+                evt.preventDefault();
+            } 
+            else 
+            {
+                if ((value >= 0) && (value <= 100))
+                {
+                    return true;
+                }
+                else
+                {
+                    this.$fire(
+                    {
+                        title: "Invalid fee",
+                        type: "error",
+                        timer: 3000
+                    });
+
+                    this.bondpoolers[index].memberFee = 0;
+                    return false;
+                }
+            }
+        },
+        processMemberAmount(evt, index)
+        {
+
+            this.previousMemberAmount = this.bondpoolers[index].memberAmount;
+            evt.target.select();
+
+        },
+        isValidAmount: function(evt, value, index)
+        {
+
+            evt = (evt) ? evt : window.event;
+            var charCode = (evt.which) ? evt.which : evt.keyCode;
+            if ((charCode > 31 && (charCode < 48 || charCode > 57)) && charCode !== 46) 
+            {
+                evt.preventDefault();
+            } 
+            else 
+            {
+
+                if (this.bondpoolOverflow(value) == true)
+                {
+                    this.$fire(
+                    {
+                        title: "Sum would be higher than total pool value",
+                        type: "error",
+                        timer: 3000
+                    });
+
+                    this.bondpoolers[index].memberAmount = this.previousMemberAmount;
+                    this.previousMemberAmount = "";
+                    return false;
+
+                }
+                else if (value > 0)
+                {
+                    return true;
+                }
+                else
+                {
+                    this.$fire(
+                    {
+                        title: "Amount should be higher than zero",
+                        type: "error",
+                        timer: 3000
+                    });
+
+                    this.bondpoolers[index].memberAmount = value;
+
+                    this.$refs.myMemberAmountInput.focus(); 
+                    return false;
+                }
+            }
+        },
+        isValidName: function(evt, value)
+        {
+            evt = (evt) ? evt : window.event;
+            var charCode = (evt.which) ? evt.which : evt.keyCode;
+            if (charCode == 32)
+            {
+                evt.preventDefault();
+            } 
+            else 
+            {
+                if (value.length > 0)
+                {
+                    return true;
+                }
+                else
+                {
+                    this.$fire(
+                    {
+                        title: "Invalid name",
+                        type: "error",
+                        timer: 3000
+                    });
+
+                    return false;
+                }
+            }
+        },        
+        readFile() 
+        {
+            this.myCsvFile = this.$refs.doc.files[0];
+            const reader = new FileReader();
+            if (this.myCsvFile.name.includes(".csv") || this.myCsvFile.name.includes(".txt")) 
+            {
+                reader.onload = (res) => 
+                {
+                    this.fileContent = res.target.result;
+                    this.parsedCsv = this.$papa.parse(this.fileContent, { delimiter: ",", skipEmptyLines: true }).data;
+                };
+                reader.onerror = (err) => console.log(err);
+                reader.readAsText(this.myCsvFile);
+            } 
+            else 
+            {
+                this.$alert("Could not open CSV file");
+            }
+        },
+        scrollToBottom() 
+        {
+            const scrollingElement = (document.scrollingElement || document.body);
+            scrollingElement.scrollTop = scrollingElement.scrollHeight;
+        },
+        addBondPoolMember()
+        { 
+            // Validates bondpooler member address.
+            if (this.msg['memberAddress'] == null)
+            {
+                this.$alert("All fields are mandatory");
+                return false;
+            }
+
+            if (this.msg['memberAddress'].toLowerCase() == 'invalid address')
+            {
+                this.$alert("Please provide a valid Tezos address");
+                return false;
+            }
+
+            if (this.msg['memberAddress'].toLowerCase() == 'same baker address')
+            {
+                this.$alert("By default baker is already a member of bond pool");
+                return false;
+            }
+
+            if (this.msg['memberAddress'].toLowerCase() == 'repeated address')
+            {
+                this.$alert("Address is already member of bond pool");
+                return false;
+            }
+
+            // Validates bondpooler member amount.
+            if (this.msg['memberAmount'] == null)
+            {
+                this.$alert("All fields are mandatory");
+                return false;
+            }
+
+            if (this.msg['memberAmount'].toLowerCase() == 'invalid amount')
+            {
+                this.$alert("Amount must be higher than zero");
+                return false;
+            }
+
+            if (this.msg['memberAmount'].toLowerCase() == 'amount overflow')
+            {
+                this.$alert("Sum would be higher than total pool value");
+                return false;
+            }
+
+
+            // Validates bondpooler member fee.
+            if (this.msg['memberFee'] == null)
+            {
+                this.$alert("All fields are mandatory");
+                return false;
+            }
+
+            if (this.msg['memberFee'].toLowerCase() == 'invalid fee')
+            {
+                this.$alert("Invalid fee");
+                return false;
+            }
+
+            if (this.msg['memberFee'].toLowerCase() == 'invalid percentage')
+            {
+                this.$alert("Fee must be between 0 and 100");
+                return false;
+            }
+
+            // Validates bondpooler member name.
+            if (this.msg['memberName'] == null)
+            {
+                this.$alert("All fields are mandatory");
+                return false;
+            }
+
+            if (this.msg['memberName'].toLowerCase() == 'invalid name')
+            {
+                this.$alert("Invalid name");
+                return false;
+            }
+
+            this.memberAmount = parseFloat(this.memberAmount);
+            this.memberShare = (this.memberAmount / this.bakerBalance) * 100;
+
+            var newMember = 
+            {
+                memberAddress:this.memberAddress,
+                memberAmount:this.memberAmount,
+                memberShare:this.memberShare,
+                memberFee:this.memberFee,
+                memberName: this.memberName
+            };
+
+            if (this.bondpoolers != null)
+            {
+                this.bondpoolers.push(newMember);
+            }
+
+            this.saveSettings();
+
+            this.memberAddress = '';
+            this.memberAmount = '';
+            this.memberShare = '';
+            this.memberFee = '';
+            this.memberName = '';
+            this.msg = [];
+
+        },
+        memberExists(newMemberAddress)
+        {
+            var found = false;
+
+            if (this.bondpoolers != null)
+            {
+                for (var i=0;i<this.bondpoolers.length;i++)
+                {
+                    if (this.bondpoolers[i].memberAddress.toLowerCase() == newMemberAddress)
+                    {
+                        found = true;
+                        break;
+                    }
+                } 
+            }
+
+            return found;
+
+        },
+        bondpoolOverflow(newValue)
+        {
+            var overflow = false;
+            var sum = 0.00;
+
+            if (this.bondpoolers != null)
+            {
+                for (var i=0;i<this.bondpoolers.length;i++)
+                {
+                    sum = sum + parseFloat(this.bondpoolers[i].memberAmount);
+                }
+
+                if ((sum + parseFloat(newValue)) > parseFloat(this.bakerBalance))
+                {
+                    overflow = true;
+                }
+                else
+                {
+                    overflow = false;
+                }
+            }
+
+            return overflow;
+
+        },
+        toggleBondPoolPayments()
+        {
+            this.doBondPoolPayments = !this.doBondPoolPayments;
+            this.saveSettings();
+        },
+        removeBondPoolMember(index)
+        {
+            // Asks for user's confirmation.
+            this.$confirm("Remove " + this.bondpoolers[index].memberName + " from bond pool?").then(() => {
+               if (this.bondpoolers != null)
+               {
+                   this.bondpoolers.splice(index, 1);
+               }
+               this.saveSettings();
+            });
+        },
+        getProposalsData(baseArray)
+        {
+
+            for (var v=0;v<baseArray.length;v++)
+            {
+                if (baseArray[v].status === "active")
+                {
+                    let element = 
+                    {
+                        alias: baseArray[v].metadata == null ? "" : baseArray[v].metadata.alias, 
+                        hash: baseArray[v].hash, 
+                        status: baseArray[v].status,
+                        kind: baseArray[v].kind,
+                        startTime: baseArray[v].startTime,
+                        endTime: baseArray[v].endTime,
+                        myVoteCommand: ""
+                    }; 
+
+                    this.proposals.push(element);
+                }
+            }
+        },
+        getCurrentGovernancePeriod(data)
+        {
+            this.currentProposalStartTime = data.startTime;
+            this.currentProposalEndTime = data.endTime;
+            this.currentProposalKind = data.kind;
+            this.currentProposalStatus = data.status;
+        },
+        capitalizeFirstLetter(phrase)
+        {
+            if (phrase == null)
+                return "";
+
+            if (phrase.length > 0)
+            {
+                return phrase.charAt(0).toUpperCase() + phrase.slice(1);
+            }
+            else
+            {
+                return "";
+            }
+        },
+        dateBackFrom(date)
+        {
+            if (date == null)
+                return "";
+
+            if (date.length > 0)
+            {
+                return formatDistance(parseISO(date), new Date, { addSuffix: true} );
+            }
+            else
+                return "";
+        },
+        dateForwardTo(date)
+        {
+            if (date == null)
+                return "";
+
+            if (date.length > 0)
+            {
+                return formatDistance(parseISO(date), new Date, { addSuffix: true} );
+            }
+            else
+                return "";
+        },
+        vote(delegate, hash, voteCast, period, index)
+        {
+            var message = "";
+
+            if (period == "proposal")
+            {
+                message = "Confirm vote for this governance proposal?";
+            }
+            else
+            {
+                message = "Confirm vote '" + voteCast + "' for this governance proposal?";
+            }
+
+            // Asks for user's confirmation.
+            this.$confirm(message).then(() => {
+
+            if (period == "proposal")
+            {
+                this.proposals[index].myVoteCommand = './tezos-client submit proposals for ' + delegate + ' ' + hash;
+            }
+            else
+            {
+                this.proposals[index].myVoteCommand = './tezos-client submit ballot for ' + delegate + ' ' + hash + ' ' + voteCast;
+            }
+
+            });
+        },
+        onCopy()
+        {
+            this.$fire(
+            {
+                title: "Copied!",
+                text: "Now paste on your node's command line to vote",
+                type: "success",
+                timer: 10000
+            });
+        },
+        onError()
+        {
+            this.$fire(
+            {
+                title: "Error",
+                text: "Could not copy to clipboard",
+                type: "error",
+                timer: 5000
+            });
+        }
+
+    },
+    updated ()
+    {
+        if (this.menuop === "csvbatch" && this.parsedCsv != null)
+        {
+            this.scrollToBottom();
         }
 
     },
@@ -1413,7 +2825,10 @@ export default {
             // Gets the current Tezos blockchain cycle.
             axios
                 .get(GET_TEZOS_HEAD_URL)
-                .then(response => ( this.currentCycle = response.data.cycle) )
+                .then(response => ( 
+                                    this.currentCycle = response.data.cycle,
+                                    this.payoutCycle == 0 ? this.payoutCycle = this.currentCycle - 6 : this.payoutCycle)
+                                   )
                 .catch(error => { console.log(error) })
         }
         catch(error)
@@ -1421,20 +2836,37 @@ export default {
             console.log(error);
         }
 
+        // Gets list of Tezos governance proposals.
+        axios
+            .get(GET_PROPOSALS_LIST_URL)
+            .then(response => ( 
+                                this.getProposalsData(response.data)
+                            ))
+            .catch(error => { console.log(error) });
+
+        // Gets current Tezos governance period.
+        axios
+            .get(GET_PROPOSALS_CURRENT_URL)
+            .then(response => ( 
+                                this.getCurrentGovernancePeriod(response.data)
+                            ))
+            .catch(error => { console.log(error) });
+
+
         // Checks if wallet is already instantiated. If not, creates it, without connecting.
         this.initWallet(false);
 
         // Changes DISTRIBUTE button caption according to status.
         this.toggleStatus();
 
-        // Checks if device has a small screen (mobile).
-        if( screen.width <= 760 )
+        // Checks if device is mobile.
+        if( screen.width > 820 )
         {
-            this.isMobile = true;
+            this.isMobile = false;
         }
         else
         {
-            this.isMobile = false;
+            this.isMobile = true;
         }
 
     },
@@ -1462,8 +2894,178 @@ export default {
         computedUnavailable: function() 
         {
             return this.UNAVAILABLE_MESSAGE;
+        },
+        computedTotalSumCsv: function()
+        {
+            if (this.parsedCsv != null)
+            {
+                let sum = 0;
+                this.parsedCsv.forEach(function(item)
+                        {
+                        sum += parseInt(item[1]);
+                        });
+
+                return sum;
+            }
+            else
+                return "";
+        },
+        computedTotalDelegatorsRewards: function()
+        {
+            if (this.delegators != null)
+            {
+                if (this.delegators.length > 0)
+                {
+                    let sum = 0;
+                    for (var k=0;k<this.totalDelegators;k++)
+                    {
+                        // Main calculations (done for each delegator).
+                        let delegator = this.delegators[k];
+                        let sharePercent = (delegator.balance / this.stakingBalance);
+                        let shareValue = (this.totalRewards * sharePercent);
+        
+                        if (this.payoutArray[k].value == true)
+                        {
+                            sum = sum + shareValue;
+                        }
+                    }
+
+                    return (sum / ONE_MILLION);
+                }
+                else
+                return "";
+
+            }
+            else
+                return "";
+        },
+        computedTotalDelegatorsActual: function()
+        {
+
+            if (this.delegators != null)
+            {
+                if (this.delegators.length > 0)
+                {
+                    let sum = 0;
+                    for (var k=0;k<this.totalDelegators;k++)
+                    {
+                        // Main calculations (done for each delegator).
+                        let delegator = this.delegators[k];
+                        let sharePercent = (delegator.balance / this.stakingBalance);
+                        let shareValue = (this.totalRewards * sharePercent);
+                        let delegatorFeePercent = (this.feeArray[k].fee/100);
+                        let delegatorFeeValue = (shareValue * delegatorFeePercent);
+                        let shareValueAfterFee = Math.round(shareValue - delegatorFeeValue);
+
+                        if (this.payoutArray[k].value == true)
+                        {
+                            sum = sum + shareValueAfterFee;
+                        }
+                    }
+
+                    return (sum / ONE_MILLION);
+                }
+                else
+                    return "";
+
+            }
+            else
+                return "";
+        },
+        computedBondPoolersTotalBalance: function()
+        {
+            if (this.bondpoolers != null)
+            {
+                let sum = 0;
+                for (var k=0;k<this.bondpoolers.length;k++)
+                {
+                    sum += parseFloat(this.bondpoolers[k].memberAmount);
+                }
+                
+                return sum;
+            
+            }
+            else
+                return "";
+        },
+        computedBakerPoolShare: function()
+        {
+            if (this.bondpoolers != null)
+            {
+                let sum = 0;
+                for (var k=0;k<this.bondpoolers.length;k++)
+                {
+                    sum = sum + this.bondpoolers[k].memberShare;
+                }
+ 
+                return (100 - sum);
+            
+            }
+            else
+                return "";
+            
+        },
+        computedPoolTotalBalance: function()
+        {
+            return this.bakerBalance;
+        },
+        computedPoolTotalShare: function()
+        {
+            if (this.bondpoolers != null)
+            {
+                let sum = 0;
+                for (var k=0;k<this.bondpoolers.length;k++)
+                {
+                    sum = sum + this.bondpoolers[k].memberShare;
+                }
+ 
+                return sum;
+            
+            }
+            else
+                return "";
+            
+        },
+        computedPoolTotalEarnings: function()
+        {
+            if (this.bondpoolers != null)
+            {
+                let sum = 0;
+                for (var k=0;k<this.bondpoolers.length;k++)
+                {
+                    sum = sum + ((((this.totalRewards - (this.computedTotalDelegatorsActual * ONE_MILLION)) / ONE_MILLION)) * this.bondpoolers[k].memberShare) / 100;
+                }
+
+                return sum;
+            
+            }
+            else
+            return "";
+        },
+        computedPoolActualEarnings: function()
+        {
+            if (this.bondpoolers != null)
+            {
+                let sum = 0;
+                let bakerEarnings = ((((this.totalRewards - (this.computedTotalDelegatorsActual * ONE_MILLION)) / ONE_MILLION)) * this.computedBakerPoolShare) / 100;
+                for (var m=0;m<this.bondpoolers.length;m++)
+                {
+                    if (this.bondpoolers[m].memberAddress != this.configuredBakerId)
+                    {
+                        let earnings = ((((this.totalRewards - (this.computedTotalDelegatorsActual * ONE_MILLION)) / ONE_MILLION)) * this.bondpoolers[m].memberShare) / 100;
+                        sum = sum + (earnings - ((earnings * this.bondpoolers[m].memberFee)/100));
+                    }
+                }
+
+                return (sum - bakerEarnings);
+            
+            }
+            else
+            return "";
         }
-   },
+
+
+    },
     watch: 
     {
         configuredBakerId(value)
@@ -1505,9 +3107,30 @@ export default {
                 }
             }
 
+        },
+        memberAddress(value)
+        {
+            this.memberAddress = value;
+            this.validateBondpoolerAddress(value);
+        },
+        memberAmount(value)
+        {
+            this.memberAmount = value;
+            this.validateBondpoolerAmount(value);
+        },
+        memberFee(value)
+        {
+            this.memberFee = value;
+            this.validateBondpoolerFee(value);
+        },
+        memberName(value)
+        {
+            this.memberName = value;
+            this.validateBondpoolerName(value);
         }
 
     }
+
 }
 </script>
 
@@ -1725,3 +3348,4 @@ export default {
 } 
 
 </style>
+
