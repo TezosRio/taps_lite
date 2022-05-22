@@ -1,6 +1,6 @@
 # TAPS LITE
 
-**TAPS** - A tool for Bakers!
+**TAPS** - A tool for Bakers!   NEW VERSION! (May 2022)
 
 TAPS LITE is a Tezos dApp that enables Tezos Bakers to easily distribute rewards with a web-page like interface, through Beacons.
 TAPS will fetch your delegators list and display it on screen with tools to configure, edit, enable and disable payments.
