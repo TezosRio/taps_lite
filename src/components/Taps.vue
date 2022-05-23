@@ -626,22 +626,22 @@
 <div class="container" v-if="isMobile === true" style="margin:none;padding:0px 0px 0px 0px;">
     <div id="mobileWelcome" class="text-center" v-show="isConnected === false">
         <section class="box-content-rewards" style="text-center" id="welcomeMobile" v-show="menuop === 'welcome' && isConnected === false">
-            <div class="text-center" style="display:block;padding:20px;margin-top:60px;">
+            <div class="text-center" style="display:block;padding:20px;margin-top:100px;">
                 <figure>
-                    <img :src="images.logo" class="img-logo-taps" alt="TAPS" width="150">
+                    <img :src="images.logo" class="img-logo-taps" alt="TAPS" width="200">
                 </figure>
-                <br><br>
+                <br><br><br>
                 <div style="background-color:transparent;width:100%;border:none;">
-                    <span style="color:black;font-family: Verdana, sans-serif;font-weight: lighter;font-size:12px;">
+                    <span style="color:black;font-family: Verdana, sans-serif;font-weight: lighter;font-size:16px;">
                         The Easiest Way to Distribute<br>
                         Tezos Baking Rewards
                     </span>
                     <br><br>
-                    <span style="color:grey;font-family: Verdana, sans-serif;font-weight: lighter;font-size:12px;">
+                    <span style="color:grey;font-family: Verdana, sans-serif;font-weight: lighter;font-size:14px;">
                         Manage your cycle payments easily!<br>
                         Distribute rewards at a button click!
                     </span>
-                    <br><br><br> 
+                    <br><br><br><br> 
                     <div style="width:100%;height:auto;border:none;">
                         <button type="button" id="idBtnConnect" class="botao-taps" v-on:click="connectWallet">CONNECT</button>
                     </div>
@@ -688,7 +688,7 @@
             </div>
 
             <div style="position:absolute;top:80px;left:0px;background-color:grey;width:100%;height:25px;font-size:11px;padding:3px;color:white;text-align:right;">
-                <span>Balance: {{addressBalance ? addressBalance : ''}} {{addressBalance ? tezSymbol : ''}}</span>
+                <span style="padding-right:20px;">Balance: {{addressBalance ? addressBalance : ''}} {{addressBalance ? tezSymbol : ''}}</span>
             </div>
         </div>
 
@@ -807,7 +807,7 @@
             </section>
 
             <section id="delegatorsMobile" v-show="(menuop === 'delegators')">
-                <div style="position:absolute;height:auto;left:52%;transform: translate(-55%, 0);padding:10px;">
+                <div style="position:absolute;height:auto;left:52%;transform: translate(-55%, 0);padding:5px;">
                     <h5>Delegators</h5>
                     <h6>Payout Cycle: 
                         <input id="idCycleToPayMobile" name="cycleToPayMobile" type="text" align="center" size="2"  maxlength="10" v-model="payoutCycle" @keypress="isNumber($event)" value="payoutCycle" @change="fetchBakerDelegators(false)" placeholder="" style="text-align:center;font-size:12px;">&nbsp;
@@ -871,26 +871,26 @@
                         </div>
                         <div style="float:left;">
                             <br>
-                            <table cellpadding="4">
+                            <table>
                                 <thead style="font-size:12px;font-weight:bold;line-height:10px;">
                                     <tr style="line-height:10px;">
-                                        <th style="text-align:left;line-height:20px;" scope="col">Delegator</th>
-                                        <th style="text-align:left;line-height:20px;" scope="col">Fee</th>
-                                        <th style="text-align:left;line-height:20px;" scope="col">Rewards</th>
-                                        <th style="text-align:left;line-height:20px;" scope="col">Pay?</th>                                
+                                        <th style="text-align:left;line-height:20px;width:100px !important;" scope="col">Delegator</th>
+                                        <th style="text-align:left;line-height:20px;width:100px;" scope="col">Fee</th>
+                                        <th style="text-align:center;line-height:20px;width:100px;" scope="col">Rewards</th>
+                                        <th style="text-align:center;line-height:20px;width:100px;" scope="col">Pay?</th>                                
                                     </tr>
                                 </thead>
 
                                 <tbody>
                                     <tr v-for="(delegator,  index) in delegators" :key="index">
-                                        <td style="font-size: 12px;line-height:20px;" align="left">{{ delegator.address.substr(0, 6) + '...' + delegator.address.substr(delegator.address.length - 6, delegator.address.length) }}</td>
-                                        <td style="font-size: 12px;line-height:15px;display: inline-block;white-space: nowrap;" align="center">
+                                        <td style="font-size: 12px;line-height:20px;width:width:100px !important;" align="left">{{ delegator.address.substr(0, 6) + '...' + delegator.address.substr(delegator.address.length - 6, delegator.address.length) }}</td>
+                                        <td style="font-size: 12px;line-height:15px;display:inline-block;white-space: nowrap;width:width:100px;" align="center">
                                             <input id="idDelegatorFee" name="delegatorFee" type="text" align="center" size="2"  maxlength="3" v-model="feeArray[index].fee" @keypress="isNumber($event)" value="feeArray[index].fee" @change="saveSettings" placeholder="" style="text-align: center;font-size: 12px;">&nbsp;%
                                         </td>
-                                        <td style="font-size: 12px;line-height:20px;" align="center">
+                                        <td style="font-size: 12px;line-height:20px;width:width:100px;" align="center">
                                             {{(((totalRewards / ONE_MILLION) * (delegator.balance / stakingBalance))) - (((totalRewards / ONE_MILLION) * (delegator.balance / stakingBalance) * (feeArray[index].fee/100))) | formatTez }}{{tezSymbol}}
                                         </td>
-                                        <td align="center" style="line-height:20px;">
+                                        <td align="center" style="line-height:20px;width:width:100px;">
                                             <toggle-button
                                             :value="payoutArray[index].value"
                                             :sync="true"
