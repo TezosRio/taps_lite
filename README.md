@@ -1,6 +1,6 @@
 # TAPS LITE
 
-**TAPS** - A tool for Bakers!
+**TAPS** - A tool for Bakers!   NEW VERSION! (May 2022)
 
 TAPS LITE is a Tezos dApp that enables Tezos Bakers to easily distribute rewards with a web-page like interface, through Beacons.
 TAPS will fetch your delegators list and display it on screen with tools to configure, edit, enable and disable payments.
@@ -34,7 +34,12 @@ This software is BETA. It is experimental and still under development and testin
  - Simulates rewards distribution as a preview in a PDF file.
  - Stores user configuration in the browser – no data ever leaves the dApp.
  - Allows reset previously saved configuration, returning to factory default state.
- - And finally: Distributes rewards through building a batch transaction that is then sent to user’s preferred wallet through Beacon.
+ - Distributes rewards through building a batch transaction that is then sent to user’s preferred wallet through Beacon.
+ - (NEW!) Now mobile friendly.
+ - (NEW!) On "DELEGATORS" menu option, now it's possible to specify for which cycle to distribute rewards to.
+ - (NEW!) CSV Batch feature, allows to import a standard "Comma Separated Values" text file for building a manual Tezos batch operation.
+ - (NEW!) Bond Pool rewards distribution! Just like on TAPS classic, now bakers can handle Bond Pool in TAPS LITE.
+ - (NEW!) Governance, voting! A tool to facilitate Tezos Governance proposals voting for bakers.
 
 ## Credits
 
