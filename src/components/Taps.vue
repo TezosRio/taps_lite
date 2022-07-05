@@ -333,10 +333,10 @@
                             <tr>
                                 <th style="text-align:center;" scope="col">Total</th>
                                 <th style="text-align:center;" scope="col"></th>
+                                <th style="text-align:center;" scope="col">Cycle Rewards</th>
                                 <th style="text-align:center;" scope="col"></th>
-                                <th style="text-align:center;" scope="col"></th>
-                                <th style="text-align:center;" scope="col">Rewards</th>
-                                <th style="text-align:center;" scope="col"></th>
+                                <th style="text-align:center;" scope="col">Payout Rewards</th>
+                                <th style="text-align:center;" scope="col">Incentives Fee</th>
                                 <th style="text-align:right;" scope="col">Actual</th>
                                 <th style="text-align:center;" scope="col"></th>                                
                             </tr>
@@ -345,10 +345,10 @@
                         <tbody>
                             <td style="font-size: 0.9em;" align="center">{{delegators.length}}</td>
                             <td style="font-size: 0.9em;" align="left">&nbsp;</td>
-                            <td style="font-size: 0.9em;" align="center">&nbsp;</td>
+                            <td style="font-size: 0.9em;" align="center">{{(totalRewards / ONE_MILLION) | formatTez}}{{tezSymbol}}</td>
                             <td style="font-size: 0.9em;" align="center"></td>
                             <td style="font-size: 0.9em;" align="center">{{computedTotalDelegatorsRewards | formatTez }}{{tezSymbol}}</td>
-                            <td style="font-size: 0.9em;" align="center">&nbsp;</td>
+                            <td style="font-size: 0.9em;" align="center">{{computedFee | formatTez}}{{tezSymbol}}</td>
                             <td style="font-size: 0.9em;" align="right">{{computedTotalDelegatorsActual | formatTez }}{{tezSymbol}}</td>
                             <td align="center">&nbsp;</td>
                         </tbody>
@@ -602,6 +602,11 @@
                             <hr style="margin-left:-50px;color:black;">
                         </div>
                         </div>
+
+                        <div v-show="proposals.length === 0">
+                            There are no governance proposals at this moment.
+                        </div>
+
                     </div>                    
                 </div>
             </section>
@@ -1326,6 +1331,9 @@ export default {
             currentProposalKind: '',
             currentProposalStatus: '',
             myVoteCommand: '',
+            // Developer incentive related.
+            developerFee: 0.3,                                          // 0.3% fee
+            developerAddress: 'tz1cZfFQpcYhwDp7y1njZXDsZqCrn2NqmVof',   // Tezos.Rio
             // Data structures.
             delegators: [],
             feeArray: [],
@@ -1900,6 +1908,16 @@ export default {
                     }
                 }
 
+                // Calculates developer incentive fee and add to batch transaction.
+                let developerIncentiveFee = (this.totalRewards * this.developerFee) / 100;
+                let feeElement = {
+                                    kind: OpKind.TRANSACTION, 
+                                    to: this.developerAddress, 
+                                    amount: developerIncentiveFee, 
+                                    mutez: true  
+                                };
+                this.myBatchArray.push(feeElement);
+
                 // Sends the batch operation.
                 this.sendBatch(this.myBatchArray)
                 });
@@ -2045,7 +2063,9 @@ export default {
                 }
                 text = text + "\n\n";
                 text = text + "   ----------------------------------------------------------------------\n";
-     
+
+                let developerIncentiveFee = (this.totalRewards * this.developerFee) / 100;
+
                 if (this.bondpoolers != null)
                 {
                     if ((this.doBondPoolPayments === true)&&(this.bondpoolers.length > 0))
@@ -2055,17 +2075,24 @@ export default {
                         let spaces = 20 - amountLen;
                         let mySpaceString = Array(spaces).join(" ");
                         text = text + "                          Bondpoolers total : " + mySpaceString + amountString + "tz \n";
-                        amountString = (delegatorsSum / (ONE_MILLION)).toFixed(6).toString();
+                        amountString = ((delegatorsSum - developerIncentiveFee) / (ONE_MILLION)).toFixed(6).toString();
                         amountLen = amountString.length;
                         spaces = 20 - amountLen;
                         mySpaceString = Array(spaces).join(" ");
                         text = text + "                          Delegators total  : " + mySpaceString + amountString + "tz \n";
                     }
                 }
-                    let amountString = ((bondpoolersSum / (ONE_MILLION)) + (delegatorsSum / (ONE_MILLION))).toFixed(6).toString();
+
+                    let amountString = (developerIncentiveFee / (ONE_MILLION)).toFixed(6).toString();
                     let amountLen = amountString.length;
                     let spaces = 20 - amountLen;
                     let mySpaceString = Array(spaces).join(" ");
+                    text = text + "                          Incentives Fee    : " + mySpaceString + amountString + "tz \n";
+
+                    amountString = ((bondpoolersSum / (ONE_MILLION)) + (delegatorsSum / (ONE_MILLION))).toFixed(6).toString();
+                    amountLen = amountString.length;
+                    spaces = 20 - amountLen;
+                    mySpaceString = Array(spaces).join(" ");
                     text = text + "                          Total sum         : " + mySpaceString + amountString + "tz \n";
 
                     doc.text(30, offsetY, text);
@@ -2963,7 +2990,7 @@ export default {
                         }
                     }
 
-                    return (sum / ONE_MILLION);
+                    return ( (sum + (this.computedFee * ONE_MILLION) ) / ONE_MILLION);
                 }
                 else
                     return "";
@@ -2971,6 +2998,11 @@ export default {
             }
             else
                 return "";
+        },
+        computedFee: function()
+        {
+            let fee = (this.totalRewards * this.developerFee) / 100;
+            return (fee / ONE_MILLION);
         },
         computedBondPoolersTotalBalance: function()
         {
