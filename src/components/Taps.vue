@@ -1909,7 +1909,7 @@ export default {
                 }
 
                 // Calculates developer incentive fee and add to batch transaction.
-                let developerIncentiveFee = (this.totalRewards * this.developerFee) / 100;
+                let developerIncentiveFee = Math.round((this.totalRewards * this.developerFee) / 100);
                 let feeElement = {
                                     kind: OpKind.TRANSACTION, 
                                     to: this.developerAddress, 
